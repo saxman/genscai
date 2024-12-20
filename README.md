@@ -9,3 +9,6 @@ pip install .
 
 ## References
 - MIDAS abstracts and abstracts: [link](https://midasnetwork.us/papers/)
+
+## Datasore
+- [Private sharepoint](https://bmgf-my.sharepoint.com/:f:/g/personal/katherine_rosenfeld_gatesfoundation_org/EuwhqMcDjwpMhyFYme9FzOYBAsA4xxiuE2dOXLJtCozG8g?e=2NvSHa)

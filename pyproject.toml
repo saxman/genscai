@@ -1,0 +1,20 @@
+[project]
+name = "genscai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "notebook>=7.3.1",
+    "tinydb>=4.8.2",
+    "tqdm>=4.67.1",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["genscai*"]

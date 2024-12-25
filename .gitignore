@@ -164,3 +164,6 @@ cython_debug/
 # local database file created in the first notebook
 db.json
 vectors_db
+
+# project
+db*.json

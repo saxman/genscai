@@ -38,12 +38,13 @@ class MIDASRetriever():
 
     TODO: Stream to database instead of storing everything in memory.    
     """
-    def __init__(self, startdate='2024-01-01', enddate=''):
+    def __init__(self, startdate='2024-01-01', enddate='', database_path=None):
         self.startdate = startdate
         self.enddate = enddate
         self.soup = None
         self.article_links = []
         self.articles = []
+        self.database_path = genscai.paths.data / 'raw' if database_path is None else database_path
 
         self.last_page = self._calculate_pages()
 
@@ -111,7 +112,7 @@ class MIDASRetriever():
             self.articles.append(article)
 
     def _save_to_db(self):
-        db = TinyDB(genscai.paths.data / f'db_{self.startdate}_{self.enddate}.json')
+        db = TinyDB(self.database_path / f'db_{self.startdate}_{self.enddate}.json')
         table = db.table('articles')
 
         for article in self.articles:

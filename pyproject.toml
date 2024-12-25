@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4>=4.12.3",
     "notebook>=7.3.1",
+    "polars>=1.18.0",
     "tinydb>=4.8.2",
     "tqdm>=4.67.1",
 ]

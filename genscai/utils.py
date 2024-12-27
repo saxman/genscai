@@ -1,3 +1,6 @@
+import re
+from tinydb import TinyDB
+
 def print_model_info(model):
     print(f'model : size : {model.get_memory_footprint() // 1024 ** 2} MB')
 
@@ -46,3 +49,30 @@ def print_device_info():
         print(f'device {i} : mem total : {info.total // 1024 ** 2} MB')
         print(f'device {i} : mem used  : {info.used // 1024 ** 2} MB')
         print(f'device {i} : mem free  : {info.free // 1024 ** 2} MB')
+
+class ReadOnlyTinyDB(TinyDB):
+    def insert(self, *args, **kwargs):
+        raise PermissionError("Database is in read-only mode")
+
+    def insert_multiple(self, *args, **kwargs):
+        raise PermissionError("Database is in read-only mode")
+
+    def update(self, *args, **kwargs):
+        raise PermissionError("Database is in read-only mode")
+
+    def remove(self, *args, **kwargs):
+        raise PermissionError("Database is in read-only mode")
+
+    def truncate(self, *args, **kwargs):
+        raise PermissionError("Database is in read-only mode")
+
+def extract_dates(s: str) -> list:
+    """ Extract dates from a string using regex. (YYY-MM-DD) """
+    date_pattern = r'(\d{4}-\d{2}-\d{2})'
+    # Extract dates using re.search
+    match = re.findall(date_pattern, s)
+    if match:
+        return match
+    else:
+        print("No dates found in the file path.")
+        return None

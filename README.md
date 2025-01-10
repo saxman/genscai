@@ -1,6 +1,12 @@
 # genscai
 Gen AI Recipes for Science and Research
 
+## Data availability
+Data is available on hugging-face (currently a private repository):
+```
+data = load_dataset("krosenf/midas-abstracts")
+```
+
 ## Setup
 Install (recommend to use a virtual environment such as [uv](https://docs.astral.sh/uv/getting-started/installation/)):
 ```

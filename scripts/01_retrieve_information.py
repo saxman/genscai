@@ -2,6 +2,7 @@
 This script retrieves MIDAS abstracts and metadata using a daterange (inclusive)
 and saves them to a database.
 """
+import hashlib
 import sciris as sc
 import polars as pl
 from icecream import ic
@@ -73,6 +74,37 @@ def run_processor():
     # Remove entries with no abstract or title
     df = df.filter(pl.col("abstract") != "No abstract available.")
     df = df.filter(pl.col("title") != "No abstract available.")
+
+    # create an id
+    def hash_str(s: str) -> str:
+        return hashlib.md5(s.encode()).hexdigest()
+    # Add the hashed 'id' column
+    df = df.with_columns(
+        pl.col("title").map_elements(hash_str).alias("id")
+    )
+
+    # Create first author column
+    df = df.with_columns(
+        pl.col("reference").map_elements(lambda x: x.split(" ")[0]).alias("first_author")
+    )
+    # drop dublicates using first author
+    df = df.unique(subset=["title"], keep='last') # can also subset by first_author
+
+    # identify elements of df whose ids are not unique
+    duplicate_ids = df.group_by("id").count().filter(pl.col("count") > 1)
+    duplicates = df.filter(pl.col("id").is_in(duplicate_ids["id"]))
+    for id, group in duplicates.group_by("id"):
+        print(group)
+
+    # assert that all the ids are now unique
+    print(df["id"].n_unique(), len(df))
+    assert df["id"].n_unique() == len(df), "IDs are not unique"
+
+    # reorder the columns so that id is first
+    df = df.select(["id"] + [col for col in df.columns if col != "id"])
+
+    # drop the first_author column
+    df.drop_in_place("first_author")
 
     # split the dataframe into train, test and validate sets
     train, test, validate = train_test_validate_split(df, verbose=True)

@@ -1,12 +1,7 @@
 import json
 import pandas as pd
 
-import torch
-from transformers import AutoTokenizer
-from transformers import AutoModelForCausalLM
-
-from transformers.utils import logging
-logging.set_verbosity_error() 
+from genscai.modeling import load_model, generate_text, delete_model
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -69,45 +64,6 @@ Prompt:
 Abstract:
 {abstract}
 """
-
-
-def load_model(model_id, model_kwargs):
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        **model_kwargs
-    )
-
-    return model, tokenizer
-
-
-def generate_text(model, tokenizer, prompt, generate_kwargs):
-    generate_kwargs["bos_token_id"] = tokenizer.bos_token_id
-    generate_kwargs["pad_token_id"] = tokenizer.eos_token_id
-    generate_kwargs["eos_token_id"] = tokenizer.eos_token_id
-
-    messages = [
-        {
-            "role": "user",
-             "content": prompt
-        }
-    ]
-    
-    input_ids = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        return_tensors="pt"
-    ).to(model.device)
-    
-    outputs = model.generate(
-        input_ids,
-        **generate_kwargs
-    )
-    
-    response = outputs[0][input_ids.shape[-1]:]
-    
-    return tokenizer.decode(response, skip_special_tokens=True)
 
 
 def load_data():
@@ -191,8 +147,7 @@ def run_training():
 
     print(task_prompt)
     
-    del model
-    torch.mps.empty_cache()  
+    delete_model(model)
 
 
 if __name__ == "__main__":

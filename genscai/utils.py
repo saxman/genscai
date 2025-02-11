@@ -20,9 +20,10 @@ def print_model_info(model):
         print(f'model : 4-bit quantized : {model.is_loaded_in_4bit}')
     except:
         pass
-    
-    print(f'model : on GPU : {next(model.parameters()).is_cuda}')
 
+    param = next(model.parameters())
+    print(f'model : on GPU (CUDA) : {param.is_cuda}')
+    print(f'model : on GPU (MPS) : {param.is_mps}')
 
 def print_device_map(model):
     import pprint
@@ -31,7 +32,7 @@ def print_device_map(model):
     pp.pprint(model.hf_device_map)
 
 
-def print_device_info():
+def print_cuda_device_info():
     import pynvml
     
     pynvml.nvmlInit()

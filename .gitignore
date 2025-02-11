@@ -167,3 +167,6 @@ vectors_db
 
 # project
 db*.json
+test.json
+train.json
+validate.json

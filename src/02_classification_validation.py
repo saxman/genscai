@@ -1,7 +1,9 @@
 import json
 import pandas as pd
 
-from genscai.modeling import load_model, generate_text, delete_model
+# from genscai.modeling import HuggingFaceClient as ModelClient
+# from genscai.modeling import OllamaClient as ModelClient
+from genscai.modeling import AisuiteClient as ModelClient
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -14,7 +16,14 @@ GENERATE_KWARGS = {
     "temperature": 0.01
 }
 
-MODEL_ID = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+# MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
+# MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
+# MODEL_ID = ModelClient.MODEL_GEMMA_2_9B
+# MODEL_ID = ModelClient.MODEL_MISTRAL_7B
+# MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B
+
+# MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
+MODEL_ID = ModelClient.MODEL_GPT_4O
 
 TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
@@ -57,7 +66,7 @@ def load_data():
 def run_validation():
     df_data = load_data()
     
-    model, tokenizer = load_model(MODEL_ID, MODEL_KWARGS)
+    model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     
     results = {}
     predict_modeling = []
@@ -68,7 +77,7 @@ def run_validation():
         print('.', end='', flush=True)
         
         prompt = prompt_template.format(abstract=paper.abstract)
-        result = generate_text(model, prompt, tokenizer, GENERATE_KWARGS)
+        result = model_client.generate_text(prompt, GENERATE_KWARGS)
     
         if 'yes' in result.lower():
             predict_modeling.append(True)
@@ -90,7 +99,7 @@ def run_validation():
     print(f'\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}')
     print(df_data.query('is_modeling != predict_modeling'))
     
-    delete_model(model)
+    del model_client
 
 
 if __name__ == "__main__":

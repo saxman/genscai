@@ -22,7 +22,6 @@ class AisuiteClient(ModelClient):
     MODEL_GEMMA_2_9B = "ollama:gemma2:9b"
     MODEL_MISTRAL_7B = "ollama:mistral:7b"
     MODEL_QWEN_2_5_7B = "ollama:qwen2.5:7b"
-
     MODEL_GPT_4O_MINI = "openai:gpt-4o-mini"
     MODEL_GPT_4O = "openai:gpt-4o"
     
@@ -44,9 +43,6 @@ class AisuiteClient(ModelClient):
             temperature=generate_kwargs['temperature'])
 
         return response.choices[0].message.content
-    
-    def delete_model(self):
-        return
         
 
 class OllamaClient(ModelClient):
@@ -55,7 +51,7 @@ class OllamaClient(ModelClient):
     MODEL_GEMMA_2_9B = "gemma2:9b"
     MODEL_MISTRAL_7B = "mistral:7b"
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
-    
+
     def __init__(self, model_id, model_kwargs):
         super().__init__(model_id, model_kwargs)
         ollama.pull(model_id)
@@ -73,9 +69,6 @@ class OllamaClient(ModelClient):
         )
 
         return response.message.content
-    
-    def delete_model(self):
-        return
 
 
 class HuggingFaceClient(ModelClient):

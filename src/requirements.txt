@@ -1,0 +1,11 @@
+torch
+huggingface_hub
+transformers
+accelerate
+pynvml
+ollama
+aisuite
+pandas
+bs4
+tinydb
+openai

@@ -20,7 +20,9 @@ class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "ollama:llama3.2:3b"
     MODEL_GEMMA_2_9B = "ollama:gemma2:9b"
+    MODEL_DEEPSEEK_R1_8B = "ollama:deepseek-r1:8b"
     MODEL_MISTRAL_7B = "ollama:mistral:7b"
+    MODEL_MISTRAL_NEMO_12B = "ollama:mistral-nemo"
     MODEL_QWEN_2_5_7B = "ollama:qwen2.5:7b"
     MODEL_GPT_4O_MINI = "openai:gpt-4o-mini"
     MODEL_GPT_4O = "openai:gpt-4o"
@@ -48,8 +50,10 @@ class AisuiteClient(ModelClient):
 class OllamaClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "llama3.2:3b"
+    MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
     MODEL_GEMMA_2_9B = "gemma2:9b"
     MODEL_MISTRAL_7B = "mistral:7b"
+    MODEL_MISTRAL_NEMO_12B = "mistral-nemo"
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
 
     def __init__(self, model_id, model_kwargs):
@@ -74,8 +78,10 @@ class OllamaClient(ModelClient):
 class HuggingFaceClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "meta-llama/Meta-Llama-3.1-8B-Instruct"
     MODEL_LLAMA_3_2_3B = "meta-llama/Llama-3.2-3B-Instruct"
+    MODEL_DEEPSEEK_R1_8B = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     MODEL_GEMMA_2_9B = "google/gemma-2-9b-it"
     MODEL_MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
+    MODEL_MISTRAL_NEMO_12B = "mistralai/Mistral-Nemo-Instruct-2407"
     MODEL_QWEN_2_5_7B = "Qwen/Qwen2.5-7B-Instruct-1M"
 
     def __init__(self, model_id, model_kwargs):

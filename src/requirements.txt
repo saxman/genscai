@@ -2,6 +2,7 @@ torch
 huggingface_hub
 transformers
 accelerate
+sentencepiece
 pynvml
 ollama
 aisuite

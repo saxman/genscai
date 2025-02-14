@@ -2,8 +2,8 @@ import json
 import pandas as pd
 
 # from genscai.modeling import HuggingFaceClient as ModelClient
-# from genscai.modeling import OllamaClient as ModelClient
-from genscai.modeling import AisuiteClient as ModelClient
+from genscai.modeling import OllamaClient as ModelClient
+# from genscai.modeling import AisuiteClient as ModelClient
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -13,21 +13,24 @@ MODEL_KWARGS = {
 
 CLASSIFICATION_GENERATE_KWARGS = {
     "max_new_tokens": 1,
-    "temperature": 0.01
+    "temperature": 0.01,
+    "do_sample": True
 }
 
 MUTATION_GENERATE_KWARGS = {
     "max_new_tokens": 1024,
     "do_sample": True,
-    "temperature": 0.75,
+    "temperature": 1.0,
     "top_k": 50,
     "top_p": 0.95,
 }
 
-MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
+# MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 # MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
+MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
 # MODEL_ID = ModelClient.MODEL_GEMMA_2_9B
 # MODEL_ID = ModelClient.MODEL_MISTRAL_7B
+# MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
 # MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B
 # MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
 # MODEL_ID = ModelClient.MODEL_GPT_4O
@@ -56,7 +59,7 @@ Abstract:
 MUTATION_POS_PROMPT_TEMPLATE = """
 Read the prompt and scientific paper abstract below. Based on the abstract content, modify the prompt so that a well behaving LLM would correctly determine that the paper explicitly refers to or uses a disease modeling technique.
 
-Only return the modified prompt.
+Only return the modified prompt. Do not include any additional text or information.
 
 Prompt:
 {prompt}
@@ -68,7 +71,7 @@ Abstract:
 MUTATION_NEG_PROMPT_TEMPLATE = """
 Read the prompt and scientific paper abstract below. Based on the abstract content, modify the prompt so that a well behaving LLM would correctly determine that the paper DOES NOT explicitly refer to or use a disease modeling technique.
 
-Only return the modified prompt.
+Only return the modified prompt. Do not include any additional text or information.
 
 Prompt:
 {prompt}
@@ -124,7 +127,10 @@ def run_training():
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     task_prompt = TASK_PROMPT_TEMPLATE
 
-    i = 0
+    last_prompt = task_prompt
+    last_accuracy = 0
+
+    i = m = 0
 
     while True:    
         df_data = test_model(
@@ -138,16 +144,27 @@ def run_training():
         precision = true_pos / len(df_data.query('predict_modeling == True'))
         recall = true_pos / len(df_data.query('is_modeling == True'))
         accuracy = (true_pos + true_neg) / len(df_data)
-                
-        print(f'iteration {i} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}')
+        
+        print(f'iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}')
+
+        i+=1
+
+        # if accuracy has decreased, start over with the last prompt
+        if accuracy < last_accuracy:
+            task_prompt = last_prompt
+            m-=1
+            continue
+
+        last_prompt = task_prompt
+        last_accuracy = accuracy
 
         df_bad = df_data.query('is_modeling != predict_modeling')
         if len(df_bad) == 0:
             break
-        else:
-            i+=1
 
-        # use the first incorrect result for mutatiing the task prompt
+        m+=1
+
+        # use the first incorrect result for mutating the task prompt
         item = df_bad.iloc[0]
         if item.is_modeling:
             mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(prompt=task_prompt, abstract=item.abstract)

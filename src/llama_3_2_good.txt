@@ -1,0 +1,1 @@
+Read the following scientific paper abstract and determine if the paper explicitly refers to or uses a disease modeling technique (i.e., specifically designed with disease dynamics or epidemiology in mind), without considering machine learning models that are primarily focused on mortality analysis.

@@ -20,7 +20,9 @@ dependencies = [
     "aisuite",
     "pandas",
     "tinydb",
-    "openai"
+    "openai",
+    "black",
+    "black[jupyter]"
 ]
 
 

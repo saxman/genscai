@@ -1,20 +1,18 @@
 import json
 import pandas as pd
 
-# from genscai.modeling import HuggingFaceClient as ModelClient
-from genscai.modeling import OllamaClient as ModelClient
-# from genscai.modeling import AisuiteClient as ModelClient
+# from genscai.models import HuggingFaceClient as ModelClient
+from genscai.models import OllamaClient as ModelClient
+
+# from genscai.models import AisuiteClient as ModelClient
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential", # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
-    "torch_dtype": "auto"
+    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "torch_dtype": "auto",
 }
 
-GENERATE_KWARGS = {
-    "max_new_tokens": 1,
-    "temperature": 0.01
-}
+GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, do_sample: True}
 
 # MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
@@ -50,57 +48,59 @@ Abstract:
 
 
 def load_data():
-    with open('../data/modeling_papers.json', 'r') as f:
+    with open("../data/modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
-    df1['is_modeling'] = True
+    df1["is_modeling"] = True
 
-    with open('../data/non_modeling_papers.json', 'r') as f:
+    with open("../data/non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)
-    df2['is_modeling'] = False
+    df2["is_modeling"] = False
 
     return pd.concat([df1, df2])
 
 
 def run_validation():
     df_data = load_data()
-    
+
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
-    
+
     results = {}
     predict_modeling = []
 
-    prompt_template = TASK_PROMPT_TEMPLATE + '\n\n' + TASK_PROMPT_IO_TEMPLATE
-    
+    prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
+
     for paper in df_data.itertuples():
-        print('.', end='', flush=True)
-        
+        print(".", end="", flush=True)
+
         prompt = prompt_template.format(abstract=paper.abstract)
         result = model_client.generate_text(prompt, GENERATE_KWARGS)
-    
-        if 'yes' in result.lower():
+
+        if "yes" in result.lower():
             predict_modeling.append(True)
-        elif 'no' in result.lower():
+        elif "no" in result.lower():
             predict_modeling.append(False)
         else:
-            print(f'ERROR: Unrecognized response: {result}')
+            print(f"ERROR: Unrecognized response: {result}")
             predict_modeling.append(pd.NA)
-    
-    df_data['predict_modeling'] = predict_modeling
 
-    true_pos = len(df_data.query('is_modeling == True and predict_modeling == True'))
-    true_neg = len(df_data.query('is_modeling == False and predict_modeling == False'))
-    
-    precision = true_pos / len(df_data.query('predict_modeling == True'))
-    recall = true_pos / len(df_data.query('is_modeling == True'))
+    df_data["predict_modeling"] = predict_modeling
+
+    true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
+    true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
+
+    precision = true_pos / len(df_data.query("predict_modeling == True"))
+    recall = true_pos / len(df_data.query("is_modeling == True"))
     accuracy = (true_pos + true_neg) / len(df_data)
-    
-    print(f'\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}')
-    print(df_data.query('is_modeling != predict_modeling'))
-    
+
+    print(
+        f"\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}"
+    )
+    print(df_data.query("is_modeling != predict_modeling"))
+
     del model_client
 
 

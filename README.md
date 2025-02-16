@@ -2,7 +2,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-'genscai' is a suite of generative AI tools and recipes for science and engineering.
+'genscai' is a suite of generative AI tools and recipes for science and research.
 
 
 ## Data availability

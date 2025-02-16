@@ -18,9 +18,10 @@ class ReadOnlyTinyDB(TinyDB):
     def truncate(self, *args, **kwargs):
         raise PermissionError("Database is in read-only mode")
 
+
 def extract_dates(s: str) -> list:
-    """ Extract dates from a string using regex. (YYY-MM-DD) """
-    date_pattern = r'(\d{4}-\d{2}-\d{2})'
+    """Extract dates from a string using regex. (YYY-MM-DD)"""
+    date_pattern = r"(\d{4}-\d{2}-\d{2})"
     # Extract dates using re.search
     match = re.findall(date_pattern, s)
     if match:

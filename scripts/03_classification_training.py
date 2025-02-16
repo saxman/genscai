@@ -1,20 +1,21 @@
 import json
 import pandas as pd
 
-# from genscai.modeling import HuggingFaceClient as ModelClient
-from genscai.modeling import OllamaClient as ModelClient
-# from genscai.modeling import AisuiteClient as ModelClient
+# from genscai.models import HuggingFaceClient as ModelClient
+from genscai.models import OllamaClient as ModelClient
+
+# from genscai.models import AisuiteClient as ModelClient
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential", # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
-    "torch_dtype": "auto"
+    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "torch_dtype": "auto",
 }
 
 CLASSIFICATION_GENERATE_KWARGS = {
     "max_new_tokens": 1,
     "temperature": 0.01,
-    "do_sample": True
+    "do_sample": True,
 }
 
 MUTATION_GENERATE_KWARGS = {
@@ -52,8 +53,9 @@ If the abstract describes or references any of these methods or similar approach
 If the abstract focuses on non-modeling analysis, such as reporting observational data without reference to disease modeling techniques, answer "NO".
 Do not include any additional text or information.
 
-Abstract:
+<abstract>
 {abstract}
+</abstract>
 """
 
 MUTATION_POS_PROMPT_TEMPLATE = """
@@ -61,11 +63,13 @@ Read the prompt and scientific paper abstract below. Based on the abstract conte
 
 Only return the modified prompt. Do not include any additional text or information.
 
-Prompt:
+<prompt>
 {prompt}
+</prompt>
 
-Abstract:
+<abstract>
 {abstract}
+</abstract>
 """
 
 MUTATION_NEG_PROMPT_TEMPLATE = """
@@ -82,17 +86,17 @@ Abstract:
 
 
 def load_data():
-    with open('../data/modeling_papers.json', 'r') as f:
+    with open("../data/modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
-    df1['is_modeling'] = True
+    df1["is_modeling"] = True
 
-    with open('../data/non_modeling_papers.json', 'r') as f:
+    with open("../data/non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)
-    df2['is_modeling'] = False
+    df2["is_modeling"] = False
 
     return pd.concat([df1, df2])
 
@@ -100,24 +104,24 @@ def load_data():
 def test_model(model_client, prompt_template, df_data):
     results = {}
     predict_modeling = []
-    
+
     for paper in df_data.itertuples():
-        print('.', end='', flush=True)
-        
+        print(".", end="", flush=True)
+
         prompt = prompt_template.format(abstract=paper.abstract)
         result = model_client.generate_text(prompt, CLASSIFICATION_GENERATE_KWARGS)
-    
-        if 'yes' in result.lower():
+
+        if "yes" in result.lower():
             predict_modeling.append(True)
-        elif 'no' in result.lower():
+        elif "no" in result.lower():
             predict_modeling.append(False)
         else:
-            print(f'ERROR: Unrecognized response: {result}')
+            print(f"ERROR: Unrecognized response: {result}")
             predict_modeling.append(pd.NA)
 
     print()
-    
-    df_data['predict_modeling'] = predict_modeling
+
+    df_data["predict_modeling"] = predict_modeling
 
     return df_data
 
@@ -132,47 +136,58 @@ def run_training():
 
     i = m = 0
 
-    while True:    
+    while True:
         df_data = test_model(
-            model_client,
-            task_prompt + '\n\n' + TASK_PROMPT_IO_TEMPLATE,
-            df_data)
+            model_client, task_prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
+        )
 
-        true_pos = len(df_data.query('is_modeling == True and predict_modeling == True'))
-        true_neg = len(df_data.query('is_modeling == False and predict_modeling == False'))
-        
-        precision = true_pos / len(df_data.query('predict_modeling == True'))
-        recall = true_pos / len(df_data.query('is_modeling == True'))
+        true_pos = len(
+            df_data.query("is_modeling == True and predict_modeling == True")
+        )
+        true_neg = len(
+            df_data.query("is_modeling == False and predict_modeling == False")
+        )
+
+        precision = true_pos / len(df_data.query("predict_modeling == True"))
+        recall = true_pos / len(df_data.query("is_modeling == True"))
         accuracy = (true_pos + true_neg) / len(df_data)
-        
-        print(f'iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}')
 
-        i+=1
+        print(
+            f"iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}"
+        )
+
+        i += 1
 
         # if accuracy has decreased, start over with the last prompt
         if accuracy < last_accuracy:
             task_prompt = last_prompt
-            m-=1
+            m -= 1
             continue
 
         last_prompt = task_prompt
         last_accuracy = accuracy
 
-        df_bad = df_data.query('is_modeling != predict_modeling')
+        df_bad = df_data.query("is_modeling != predict_modeling")
         if len(df_bad) == 0:
             break
 
-        m+=1
+        m += 1
 
         # use the first incorrect result for mutating the task prompt
         item = df_bad.iloc[0]
         if item.is_modeling:
-            mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(prompt=task_prompt, abstract=item.abstract)
+            mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(
+                prompt=task_prompt, abstract=item.abstract
+            )
         else:
-            mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(prompt=task_prompt, abstract=item.abstract)
-        
-        task_prompt = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS)
-        
+            mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(
+                prompt=task_prompt, abstract=item.abstract
+            )
+
+        task_prompt = model_client.generate_text(
+            mutation_prompt, MUTATION_GENERATE_KWARGS
+        )
+
         print(task_prompt)
 
 

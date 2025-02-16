@@ -21,6 +21,7 @@ class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "ollama:llama3.2:3b"
     MODEL_GEMMA_2_9B = "ollama:gemma2:9b"
+    MODEL_PHI_4_14B = "ollama:phi4:14b"
     MODEL_DEEPSEEK_R1_8B = "ollama:deepseek-r1:8b"
     MODEL_MISTRAL_7B = "ollama:mistral:7b"
     MODEL_MISTRAL_NEMO_12B = "ollama:mistral-nemo"
@@ -45,8 +46,9 @@ class AisuiteClient(ModelClient):
 class OllamaClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "llama3.2:3b"
-    MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
     MODEL_GEMMA_2_9B = "gemma2:9b"
+    MODEL_PHI_4_14B = "phi4:14b"
+    MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
     MODEL_MISTRAL_7B = "mistral:7b"
     MODEL_MISTRAL_NEMO_12B = "mistral-nemo"
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"

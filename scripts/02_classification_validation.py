@@ -12,12 +12,13 @@ MODEL_KWARGS = {
     "torch_dtype": "auto",
 }
 
-GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, do_sample: True}
+GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
 
 # MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
-MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
-# MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
+# MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
 # MODEL_ID = ModelClient.MODEL_GEMMA_2_9B
+MODEL_ID = ModelClient.MODEL_PHI_4_14B
+# MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
 # MODEL_ID = ModelClient.MODEL_MISTRAL_7B
 # MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
 # MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B

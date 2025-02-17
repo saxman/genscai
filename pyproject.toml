@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = {file = "LICENSE"}
 
 # pip dependencies
-# insall with `pip install -e .`
+# install with `pip install .`
 dependencies = [
     "beautifulsoup4",
     "torch",

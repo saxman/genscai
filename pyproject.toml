@@ -7,8 +7,9 @@ requires-python = ">=3.11"
 license = {file = "LICENSE"}
 
 # pip dependencies
-# install with `pip install .`
+# install with `pip install -e .`
 dependencies = [
+    "pytest",
     "beautifulsoup4",
     "torch",
     "huggingface_hub",
@@ -25,7 +26,6 @@ dependencies = [
     "black[jupyter]",
     "sqlalchemy"
 ]
-
 
 [build-system]
 requires = ["setuptools"]

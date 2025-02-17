@@ -11,6 +11,11 @@ Data is available on hugging-face (currently a private repository):
 data = load_dataset("krosenf/midas-abstracts")
 ```
 
+
+## Dependencies
+For Hugging Face models locally (e.g. using Transformers), you'll need SentencePiece, which will be installed durring Setup. SentencePiece requires Python 3.11 or earlier, however. To use SentencePiece, you can install Python 3.11 and set up your virtual environment using 'python3.11 -m venv .venv'. Alternatively, if you're not running models locally, ignore the build error when running 'pip install'.
+
+
 ## Setup
 Set up a virtual Python environment:
 ```
@@ -24,7 +29,12 @@ source .venv/bin/activate
 
 Build the genscai module and install dependencies:
 ```
-pip install .
+pip install -e .
+```
+
+For editing and running the example notebooks locallly, you'll need to separately install Jupyter Lab:
+```
+pip install jupyterlab
 ```
 
 

@@ -12,7 +12,12 @@ data = load_dataset("krosenf/midas-abstracts")
 ```
 
 ## Setup
-Install (recommend to use a virtual environment such as [uv](https://docs.astral.sh/uv/getting-started/installation/)):
+Set up a virtual environment:
+```
+python3 -m venv .venv
+```
+
+Build genscai module and install dependencies:
 ```
 pip install .
 ```

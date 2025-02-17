@@ -22,7 +22,8 @@ dependencies = [
     "tinydb",
     "openai",
     "black",
-    "black[jupyter]"
+    "black[jupyter]",
+    "sqlalchemy"
 ]
 
 

@@ -10,6 +10,8 @@ logging.set_verbosity_error()
 import ollama
 import aisuite
 
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.orm import declarative_base
 
 class ModelClient:
     def __init__(self, model_id, model_kwargs):
@@ -159,3 +161,4 @@ def print_cuda_device_info():
         print(f"device {i} : mem total : {info.total // 1024 ** 2} MB")
         print(f"device {i} : mem used  : {info.used // 1024 ** 2} MB")
         print(f"device {i} : mem free  : {info.free // 1024 ** 2} MB")
+

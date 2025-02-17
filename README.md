@@ -32,6 +32,16 @@ Build the genscai module and install dependencies:
 pip install -e .
 ```
 
+To use developer tools such as black, install dev dependencies:
+```
+pip install -e '.[dev]'
+```
+
+To run tests with pytest, install test dependencies:
+```
+pip install -e '.[test]'
+```
+
 For editing and running the example notebooks locallly, you'll need to separately install Jupyter Lab:
 ```
 pip install jupyterlab

@@ -9,7 +9,6 @@ license = {file = "LICENSE"}
 # pip dependencies
 # install with `pip install -e .`
 dependencies = [
-    "pytest",
     "beautifulsoup4",
     "torch",
     "huggingface_hub",
@@ -22,9 +21,18 @@ dependencies = [
     "pandas",
     "tinydb",
     "openai",
+    "sqlalchemy"
+]
+
+# optional pip dependencies
+# install with `pip install -e '.[dev]'`
+[project.optional-dependencies]
+dev = [
     "black",
     "black[jupyter]",
-    "sqlalchemy"
+]
+test = [
+    "pytest",
 ]
 
 [build-system]

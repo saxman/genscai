@@ -12,13 +12,17 @@ data = load_dataset("krosenf/midas-abstracts")
 ```
 
 ## Setup
-Set up and enter a virtual environment:
+Set up a virtual Python environment:
 ```
 python3 -m venv .venv
+```
+
+Activate (enter) the virtual environment:
+```
 source .venv/bin/activate
 ```
 
-Build genscai module and install dependencies:
+Build the genscai module and install dependencies:
 ```
 pip install .
 ```

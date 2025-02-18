@@ -42,7 +42,12 @@ class PromptCatalog:
         self.session.commit()
 
     def retrieve_last(self, model_id: str) -> Prompt:
-        return self.session.query(Prompt).order_by(desc("version")).first()
+        return (
+            self.session.query(Prompt)
+            .filter(Prompt.model_id == model_id)
+            .order_by(desc(Prompt.version))
+            .first()
+        )
 
     def retrieve_all(self, model_id: str) -> list[Prompt]:
         return (
@@ -52,15 +57,18 @@ class PromptCatalog:
             .all()
         )
 
-    def delete_all(self, model_id: str):
+    def delete_all(self, model_id: str) -> int:
+        rows_deleted = 0
+
         try:
-            num_rows_deleted = (
+            rows_deleted = (
                 self.session.query(Prompt).filter(Prompt.model_id == model_id).delete()
             )
-            print(f"deleting {num_rows_deleted} rows")
             self.session.commit()
         except:
             self.session.rollback()
+
+        return rows_deleted
 
     def retrieve_model_ids(self):
         return [x.model_id for x in self.session.query(Prompt.model_id).distinct()]

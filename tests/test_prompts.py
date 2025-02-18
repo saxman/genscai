@@ -67,8 +67,22 @@ def test_delete_all(prompt_catalog):
     assert prompt1 in prompts
     assert prompt2 in prompts
 
-    prompt_catalog.delete_all(model_id)
+    rows_deleted = prompt_catalog.delete_all(model_id)
+
+    assert rows_deleted == 2
 
     prompts = prompt_catalog.retrieve_all(model_id)
 
     assert len(prompts) == 0
+
+
+def test_retrieve_model_ids(prompt_catalog):
+    model_id = "x"
+
+    prompt1 = Prompt(prompt="a", model_id=model_id)
+    prompt_catalog.store_prompt(prompt1)
+
+    model_ids = prompt_catalog.retrieve_model_ids()
+
+    assert len(model_ids) == 1
+    assert model_ids[0] == "x"

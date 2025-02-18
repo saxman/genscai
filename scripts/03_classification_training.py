@@ -5,7 +5,7 @@ from genscai import paths
 from genscai.models import OllamaClient as ModelClient
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
+MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -28,45 +28,44 @@ MUTATION_GENERATE_KWARGS = {
 }
 
 TASK_PROMPT_TEMPLATE = """
-Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease.
+Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
+
+Consider the use of disease modeling if the abstract describes or references compartmental models, statistical models, simulation models, mathematical equations, or functional forms to analyze or predict disease transmission, risk factors, or the effects of interventions.
+
+Additionally, if the paper uses epidemiological modeling, disease forecasting, regression analysis, or statistical analysis to investigate associations between disease characteristics and external factors, consider it a form of disease modeling technique.
 """
 
 TASK_PROMPT_IO_TEMPLATE = """
-If the abstract describes or references any of these methods or similar approaches, answer "YES".
-If the abstract focuses on non-modeling analysis, such as reporting observational data without reference to disease modeling techniques, answer "NO".
-Do not include any additional text or information.
+If the abstract explicitly describes or references a disease modeling technique, answer "YES".
+If the abstract does not explicitly describe or reference a disease modeling technique, or it focuses on non-modeling analysis, answer "NO".
+Do not include any additional text or information with your response.
 
-<abstract>
+Abstract:
 {abstract}
-</abstract>
 """
 
 MUTATION_POS_PROMPT_TEMPLATE = """
-Read the laguage model prompt and scientific paper abstract below. Conservatively modify the prompt so that a language model would correctly determine that the paper explicitly refers to or uses a disease modeling technique.
+Read the language model prompt and scientific paper abstract below. Modify the prompt so that a language model would correctly determine that the abstract explicitly refers to or uses a disease modeling technique.
 
 Only return the modified prompt. Do not include any additional text or information.
 
-<prompt>
+Prompt:
 {prompt}
-</prompt>
 
-<abstract>
+Abstract:
 {abstract}
-</abstract>
 """
 
 MUTATION_NEG_PROMPT_TEMPLATE = """
-Read the language model prompt and scientific paper abstract below. Conservatively modify the prompt so that a language model would correctly determine that the paper DOES NOT explicitly refer to or use a disease modeling technique.
+Read the language model prompt and scientific paper abstract below. Modify the prompt so that a language model would correctly determine that the abstract DOES NOT explicitly refer to or use a disease modeling technique.
 
 Only return the modified prompt. Do not include any additional text or information.
 
-<prompt>
+Prompt:
 {prompt}
-</prompt>
 
-<abstract>
+Abstract:
 {abstract}
-</abstract>
 """
 
 
@@ -135,8 +134,8 @@ def run_training():
         true_neg = len(
             df_data.query("is_modeling == False and predict_modeling == False")
         )
-        accuracy = (true_pos + true_neg) / len(df_data)
 
+        accuracy = (true_pos + true_neg) / len(df_data)
         pos = len(df_data.query("predict_modeling == True"))
         precision = true_pos / pos if pos > 0 else 0
         pos = len(df_data.query("is_modeling == True"))
@@ -163,7 +162,6 @@ def run_training():
         # the prompt is improved: store it, then mutate it
         catalog.store_prompt(prompt)
         last_prompt = prompt
-        prompt = Prompt(model_id=MODEL_ID, version=last_prompt.version + 1)
 
         df_bad = df_data.query("is_modeling != predict_modeling")
 
@@ -177,16 +175,24 @@ def run_training():
         item = df_bad.sample().iloc[0]
         if item.is_modeling:
             mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(
-                prompt=prompt.prompt, abstract=item.abstract
+                prompt=last_prompt.prompt, abstract=item.abstract
             )
         else:
             mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(
-                prompt=prompt.prompt, abstract=item.abstract
+                prompt=last_prompt.prompt, abstract=item.abstract
             )
 
-        prompt.prompt = model_client.generate_text(
-            mutation_prompt, MUTATION_GENERATE_KWARGS
+        print(mutation_prompt)
+
+        prompt = Prompt(
+            model_id=MODEL_ID,
+            version=last_prompt.version + 1,
+            prompt=model_client.generate_text(
+                mutation_prompt, MUTATION_GENERATE_KWARGS
+            ).strip(),
         )
+
+        print(prompt.prompt)
 
 
 if __name__ == "__main__":

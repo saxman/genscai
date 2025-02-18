@@ -13,10 +13,12 @@ data = load_dataset("krosenf/midas-abstracts")
 
 
 ## Dependencies
-For Hugging Face models locally (e.g. using Transformers), you'll need SentencePiece, which will be installed durring Setup. SentencePiece requires Python 3.11 or earlier, however. To use SentencePiece, you can install Python 3.11 and set up your virtual environment using 'python3.11 -m venv .venv'. Alternatively, if you're not running models locally, ignore the build error when running 'pip install'.
+For using Hugging Face models locally (e.g. using Transformers), you'll need SentencePiece, which will be installed during project setup (below). SentencePiece requires Python 3.11 or earlier, however. To use SentencePiece, you can install Python 3.11 and set up your virtual environment using 'python3.11 -m venv .venv' (or 'uv venv --python 3.11' if using uv). Alternatively, if you don't intend to run Hugging Face models locally, ignore the build error when running 'pip install' during setup.
 
 
 ## Setup
+### Without uv
+
 Set up a virtual Python environment:
 ```
 python3 -m venv .venv
@@ -34,19 +36,49 @@ pip install -e .
 
 To use developer tools such as black, install dev dependencies:
 ```
-pip install -e '.[dev]'
+pip install -e .[dev]
 ```
 
 To run tests with pytest, install test dependencies:
 ```
-pip install -e '.[test]'
+pip install -e .[test]
 ```
 
-For editing and running the example notebooks locallly, you'll need to separately install Jupyter Lab:
+For editing and running the example notebooks locally, you'll need to separately install Jupyter Lab:
 ```
 pip install jupyterlab
 ```
 
+### With uv
+Set up a virtual Python environment:
+```
+uv venv
+```
+
+Activate (enter) the virtual environment:
+```
+source .venv/bin/activate
+```
+
+Build the genscai module and install dependencies:
+```
+uv pip install -e .
+```
+
+To use developer tools such as black, install dev dependencies:
+```
+uv pip install -e '.[dev]'
+```
+
+To run tests with pytest, install test dependencies:
+```
+uv pip install -e '.[test]'
+```
+
+For editing and running the example notebooks locally, you'll need to separately install Jupyter Lab:
+```
+uv pip install jupyterlab
+```
 
 ## References
 - MIDAS abstracts: [link](https://midasnetwork.us/papers/)

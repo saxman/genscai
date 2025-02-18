@@ -16,12 +16,12 @@ def test_store_prompt(prompt_catalog):
 
     prompt1 = Prompt(prompt="test", model_id=model_id, version=1)
     prompt_catalog.store_prompt(prompt1)
-    prompt2 = prompt_catalog.retrieve_latest(model_id)
+    prompt2 = prompt_catalog.retrieve_last(model_id)
 
     assert prompt1.id == prompt2.id
 
 
-def test_retrieve_latest(prompt_catalog):
+def test_retrieve_last(prompt_catalog):
     model_id = "x"
 
     prompt1 = Prompt(prompt="a", model_id=model_id, version=1)
@@ -33,7 +33,7 @@ def test_retrieve_latest(prompt_catalog):
     prompt3 = Prompt(prompt="b", model_id=model_id, version=2)
     prompt_catalog.store_prompt(prompt3)
 
-    prompt4 = prompt_catalog.retrieve_latest(model_id)
+    prompt4 = prompt_catalog.retrieve_last(model_id)
 
     assert prompt2.id == prompt4.id
 

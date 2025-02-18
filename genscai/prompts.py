@@ -1,6 +1,14 @@
 import genscai
 
-from sqlalchemy import String, Integer, Float, Column, create_engine, ForeignKey, desc
+from sqlalchemy import (
+    String,
+    Integer,
+    PickleType,
+    Column,
+    create_engine,
+    ForeignKey,
+    desc,
+)
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
 Base = declarative_base()
@@ -12,9 +20,10 @@ class Prompt(Base):
     parent_id = Column(Integer, ForeignKey("prompts.id"))
     prompt = Column(String, nullable=False)
     model_id = Column(String)
-    version = Column(String)
+    version = Column(Integer)
     mutation_prompt = Column(String)
-    metrics = Column(String)
+    reasoning_prompt = Column(String)
+    metrics = Column(PickleType)
 
 
 class PromptCatalog:
@@ -32,14 +41,8 @@ class PromptCatalog:
         self.session.add(prompt)
         self.session.commit()
 
-    def retrieve_latest(self, model_id: str) -> Prompt:
-        return (
-            self.session.query(Prompt)
-            .filter(Prompt.model_id == model_id)
-            .order_by(desc(Prompt.version))
-            .limit(1)
-            .one()
-        )
+    def retrieve_last(self, model_id: str) -> Prompt:
+        return self.session.query(Prompt).order_by(desc("version")).first()
 
     def retrieve_all(self, model_id: str) -> list[Prompt]:
         return (
@@ -58,3 +61,6 @@ class PromptCatalog:
             self.session.commit()
         except:
             self.session.rollback()
+
+    def retrieve_model_ids(self):
+        return [x.model_id for x in self.session.query(Prompt.model_id).distinct()]

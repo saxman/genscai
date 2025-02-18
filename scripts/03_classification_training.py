@@ -1,10 +1,11 @@
 import json
 import pandas as pd
 
-# from genscai.models import HuggingFaceClient as ModelClient
+from genscai import paths
 from genscai.models import OllamaClient as ModelClient
+from genscai.prompts import PromptCatalog, Prompt
 
-# from genscai.models import AisuiteClient as ModelClient
+MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -21,32 +22,13 @@ CLASSIFICATION_GENERATE_KWARGS = {
 MUTATION_GENERATE_KWARGS = {
     "max_new_tokens": 1024,
     "do_sample": True,
-    "temperature": 1.0,
+    "temperature": 0.75,
     "top_k": 50,
     "top_p": 0.95,
 }
 
-# MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
-# MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
-# MODEL_ID = ModelClient.MODEL_GEMMA_2_9B
-MODEL_ID = ModelClient.MODEL_PHI_4_14B
-# MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
-# MODEL_ID = ModelClient.MODEL_MISTRAL_7B
-# MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
-# MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B
-# MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
-# MODEL_ID = ModelClient.MODEL_GPT_4O
-
 TASK_PROMPT_TEMPLATE = """
-Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
-
-Consider the use of disease modeling if the abstract describes or references compartmental models, statistical models, simulation models, mathematical equations, or functional forms to analyze or predict disease transmission, risk factors, or the effects of interventions.
-
-Additionally, if the paper employs epidemiological modeling, disease forecasting, regression analysis, or statistical analysis to investigate associations between disease characteristics and external factors, particularly related to COVID-19, consider it a form of disease modeling technique.
-
-If the abstract specifically mentions estimating the probability of disease resurgence or severity using quantitative methods, such as statistical models or mathematical equations, it should be considered a form of disease modeling technique.
-
-If the abstract discusses statistical models or techniques for analyzing topics unrelated to disease dynamics or epidemiology, such as software defects or unrelated fields, do not consider it a form of disease modeling technique.
+Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease.
 """
 
 TASK_PROMPT_IO_TEMPLATE = """
@@ -60,7 +42,7 @@ Do not include any additional text or information.
 """
 
 MUTATION_POS_PROMPT_TEMPLATE = """
-Read the prompt and scientific paper abstract below. Based on the abstract content, modify the prompt so that a well behaving LLM would correctly determine that the paper explicitly refers to or uses a disease modeling technique.
+Read the laguage model prompt and scientific paper abstract below. Conservatively modify the prompt so that a language model would correctly determine that the paper explicitly refers to or uses a disease modeling technique.
 
 Only return the modified prompt. Do not include any additional text or information.
 
@@ -74,26 +56,28 @@ Only return the modified prompt. Do not include any additional text or informati
 """
 
 MUTATION_NEG_PROMPT_TEMPLATE = """
-Read the prompt and scientific paper abstract below. Based on the abstract content, modify the prompt so that a well behaving LLM would correctly determine that the paper DOES NOT explicitly refer to or use a disease modeling technique.
+Read the language model prompt and scientific paper abstract below. Conservatively modify the prompt so that a language model would correctly determine that the paper DOES NOT explicitly refer to or use a disease modeling technique.
 
 Only return the modified prompt. Do not include any additional text or information.
 
-Prompt:
+<prompt>
 {prompt}
+</prompt>
 
-Abstract:
+<abstract>
 {abstract}
+</abstract>
 """
 
 
-def load_data():
-    with open("../data/modeling_papers.json", "r") as f:
+def load_test_data() -> pd.DataFrame:
+    with open(paths.data / "modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
     df1["is_modeling"] = True
 
-    with open("../data/non_modeling_papers.json", "r") as f:
+    with open(paths.data / "non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)
@@ -102,7 +86,9 @@ def load_data():
     return pd.concat([df1, df2])
 
 
-def test_model(model_client, prompt_template, df_data):
+def test_classification(
+    model_client: ModelClient, prompt_template: str, df_data: pd.DataFrame
+) -> pd.DataFrame:
     results = {}
     predict_modeling = []
 
@@ -117,7 +103,6 @@ def test_model(model_client, prompt_template, df_data):
         elif "no" in result.lower():
             predict_modeling.append(False)
         else:
-            print(f"ERROR: Unrecognized response: {result}")
             predict_modeling.append(pd.NA)
 
     print()
@@ -128,18 +113,20 @@ def test_model(model_client, prompt_template, df_data):
 
 
 def run_training():
-    df_data = load_data()
+    df_data = load_test_data()
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
-    task_prompt = TASK_PROMPT_TEMPLATE
 
-    last_prompt = task_prompt
-    last_accuracy = 0
+    catalog = PromptCatalog(paths.data / "prompt_catalog.db")
+    prompt = catalog.retrieve_last(MODEL_ID)
+    if prompt is None:
+        prompt = Prompt(prompt=TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
 
+    last_prompt = prompt
     i = m = 0
 
     while True:
-        df_data = test_model(
-            model_client, task_prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
+        df_data = test_classification(
+            model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
         )
 
         true_pos = len(
@@ -148,10 +135,18 @@ def run_training():
         true_neg = len(
             df_data.query("is_modeling == False and predict_modeling == False")
         )
-
-        precision = true_pos / len(df_data.query("predict_modeling == True"))
-        recall = true_pos / len(df_data.query("is_modeling == True"))
         accuracy = (true_pos + true_neg) / len(df_data)
+
+        pos = len(df_data.query("predict_modeling == True"))
+        precision = true_pos / pos if pos > 0 else 0
+        pos = len(df_data.query("is_modeling == True"))
+        recall = true_pos / pos if pos > 0 else 0
+
+        prompt.metrics = {
+            "precision": precision,
+            "recall": recall,
+            "accuracy": accuracy,
+        }
 
         print(
             f"iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}"
@@ -159,37 +154,39 @@ def run_training():
 
         i += 1
 
-        # if accuracy has decreased, start over with the last prompt
-        if accuracy < last_accuracy:
-            task_prompt = last_prompt
+        # if accuracy has decreased, revert to the last prompt and try again
+        if prompt.metrics["accuracy"] < last_prompt.metrics["accuracy"]:
+            prompt = last_prompt
             m -= 1
             continue
 
-        last_prompt = task_prompt
-        last_accuracy = accuracy
+        # the prompt is improved: store it, then mutate it
+        catalog.store_prompt(prompt)
+        last_prompt = prompt
+        prompt = Prompt(model_id=MODEL_ID, version=last_prompt.version + 1)
 
         df_bad = df_data.query("is_modeling != predict_modeling")
+
+        # stop iterating once accuracy is 100%
         if len(df_bad) == 0:
             break
 
         m += 1
 
-        # use the first incorrect result for mutating the task prompt
-        item = df_bad.iloc[0]
+        # randomly select an incorrect result for mutating the task prompt
+        item = df_bad.sample().iloc[0]
         if item.is_modeling:
             mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(
-                prompt=task_prompt, abstract=item.abstract
+                prompt=prompt.prompt, abstract=item.abstract
             )
         else:
             mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(
-                prompt=task_prompt, abstract=item.abstract
+                prompt=prompt.prompt, abstract=item.abstract
             )
 
-        task_prompt = model_client.generate_text(
+        prompt.prompt = model_client.generate_text(
             mutation_prompt, MUTATION_GENERATE_KWARGS
         )
-
-        print(task_prompt)
 
 
 if __name__ == "__main__":

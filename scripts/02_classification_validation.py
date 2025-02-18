@@ -1,10 +1,10 @@
 import json
 import pandas as pd
 
-# from genscai.models import HuggingFaceClient as ModelClient
+from genscai import paths
 from genscai.models import OllamaClient as ModelClient
 
-# from genscai.models import AisuiteClient as ModelClient
+MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -13,18 +13,6 @@ MODEL_KWARGS = {
 }
 
 GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
-
-# MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
-# MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
-# MODEL_ID = ModelClient.MODEL_GEMMA_2_9B
-MODEL_ID = ModelClient.MODEL_PHI_4_14B
-# MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
-# MODEL_ID = ModelClient.MODEL_MISTRAL_7B
-# MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
-# MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B
-
-# MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
-# MODEL_ID = ModelClient.MODEL_GPT_4O
 
 TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
@@ -49,13 +37,13 @@ Abstract:
 
 
 def load_data():
-    with open("../data/modeling_papers.json", "r") as f:
+    with open(paths.data / "modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
     df1["is_modeling"] = True
 
-    with open("../data/non_modeling_papers.json", "r") as f:
+    with open(paths.data / "non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)

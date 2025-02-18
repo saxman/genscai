@@ -3,7 +3,7 @@ name = "genscai"
 version = "0.1.0"
 description = "Generative AI Tools and Recipes for Science and Research"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 
 # pip dependencies
@@ -30,9 +30,7 @@ dependencies = [
 dev = [
     "black",
     "black[jupyter]",
-]
-test = [
-    "pytest",
+    "pytest"
 ]
 
 [build-system]
@@ -44,5 +42,4 @@ where = ["."]
 include = ["genscai*"]
 
 [tool.black]
-target-version = ["py311", "py312", "py313"]
-
+target-version = ["py39", "py310", "py311", "py312", "py313"]

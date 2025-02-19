@@ -1,11 +1,15 @@
 import json
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
+MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -29,10 +33,6 @@ MUTATION_GENERATE_KWARGS = {
 
 TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
-
-Consider the use of disease modeling if the abstract describes or references compartmental models, statistical models, simulation models, mathematical equations, or functional forms to analyze or predict disease transmission, risk factors, or the effects of interventions.
-
-Additionally, if the paper uses epidemiological modeling, disease forecasting, regression analysis, or statistical analysis to investigate associations between disease characteristics and external factors, consider it a form of disease modeling technique.
 """
 
 TASK_PROMPT_IO_TEMPLATE = """
@@ -45,7 +45,9 @@ Abstract:
 """
 
 MUTATION_POS_PROMPT_TEMPLATE = """
-Read the language model prompt and scientific paper abstract below. Modify the prompt so that a language model would correctly determine that the abstract explicitly refers to or uses a disease modeling technique.
+Read the language model prompt and scientific paper abstract below. Expand the prompt so that a language model would correctly determine that the abstract explicitly refers to or uses a disease modeling technique.
+
+Do not include the names of specific diseases in the prompt.
 
 Only return the modified prompt. Do not include any additional text or information.
 
@@ -57,7 +59,9 @@ Abstract:
 """
 
 MUTATION_NEG_PROMPT_TEMPLATE = """
-Read the language model prompt and scientific paper abstract below. Modify the prompt so that a language model would correctly determine that the abstract DOES NOT explicitly refer to or use a disease modeling technique.
+Read the language model prompt and scientific paper abstract below. Expand the prompt so that a language model would correctly determine that the abstract DOES NOT explicitly refer to or use a disease modeling technique.
+
+Do not include the names of specific diseases in the prompt.
 
 Only return the modified prompt. Do not include any additional text or information.
 
@@ -112,17 +116,27 @@ def test_classification(
 
 
 def run_training():
+    logging.basicConfig(filename='training.log', level=logging.INFO)
+    logger.info('started')
+
     df_data = load_test_data()
+
+    print('loading model...', flush=True)
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt = catalog.retrieve_last(MODEL_ID)
     if prompt is None:
         prompt = Prompt(prompt=TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
+        logger.info('using default prompt')
+    else:
+        logger.info('using stored prompt')
+    logger.info(prompt.prompt)
 
     last_prompt = prompt
     i = m = 0
 
+    # iterate using a basic hill climbing approach until a prompt is found that classifies w/100% accuracy
     while True:
         df_data = test_classification(
             model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
@@ -147,13 +161,14 @@ def run_training():
             "accuracy": accuracy,
         }
 
-        print(
-            f"iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}"
-        )
+        out = f"iteration: {i}, mutation: {m} - precision: {precision:.2f}. recall: {recall:.2f}, accuracy: {accuracy:.2f}"
+        print(out)
+        logger.info(out)
 
         i += 1
 
         # if accuracy has decreased, revert to the last prompt and try again
+        # this needs to be strictly less than, since first iteration, prompt == last_prompt
         if prompt.metrics["accuracy"] < last_prompt.metrics["accuracy"]:
             prompt = last_prompt
             m -= 1
@@ -182,18 +197,21 @@ def run_training():
                 prompt=last_prompt.prompt, abstract=item.abstract
             )
 
-        print(mutation_prompt)
+        logger.info("mutating prompt")
+        logger.info(mutation_prompt)
 
+        # generate a new prompt using the mutation
+        mutated_prompt = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS).strip()
         prompt = Prompt(
             model_id=MODEL_ID,
             version=last_prompt.version + 1,
-            prompt=model_client.generate_text(
-                mutation_prompt, MUTATION_GENERATE_KWARGS
-            ).strip(),
+            prompt=mutated_prompt
         )
 
-        print(prompt.prompt)
+        logger.info("mutated prompt")
+        logger.info(mutated_prompt)
 
+logger.debug('finished')
 
 if __name__ == "__main__":
     run_training()

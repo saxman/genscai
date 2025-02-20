@@ -47,9 +47,9 @@ pip install jupyterlab
 ```
 
 ## Setup (with uv)
-Set up a virtual Python environment:
+Set up a virtual Python environment. The '--seed' argument has uv add pip and setuptools to the virtual environment. This is optional, and is only useful if using an IDE that accesses pip directly (e.g. Visual Studio Code). 
 ```
-uv venv
+uv venv --seed
 ```
 
 Activate (enter) the virtual environment:

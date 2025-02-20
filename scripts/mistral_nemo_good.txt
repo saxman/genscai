@@ -1,1 +1,0 @@
-Read the following scientific paper abstract and determine if the paper explicitly refers to or uses a disease modeling technique, such as mathematical or statistical methods, to estimate changes in disease dynamics or their association with sociodemographic or transmission factors, **with a focus on explicitly stated methods related to disease spread, incidence, or prevalence.

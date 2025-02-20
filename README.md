@@ -38,7 +38,7 @@ pip install -e .
 
 To use developer tools such as black and pytest, install dev dependencies:
 ```
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 For editing and running the example notebooks locally, you'll need to separately install Jupyter Lab:

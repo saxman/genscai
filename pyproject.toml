@@ -15,13 +15,13 @@ dependencies = [
     "transformers",
     "accelerate",
     "sentencepiece",
-    "pynvml",
     "ollama",
     "aisuite",
     "pandas",
     "tinydb",
     "openai",
-    "sqlalchemy"
+    "sqlalchemy",
+    "docstring-parser" # requied by aisuite
 ]
 
 # optional pip dependencies
@@ -30,7 +30,12 @@ dependencies = [
 dev = [
     "black",
     "black[jupyter]",
-    "pytest"
+    "pytest",
+    "ipykernel",
+    "ipywidgets"
+]
+cuda = [
+    "pynvml"
 ]
 
 [build-system]

@@ -9,7 +9,7 @@ from genscai import paths
 from genscai.models import AisuiteClient as ModelClient
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_LLAMA_3_2_3B
+MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,

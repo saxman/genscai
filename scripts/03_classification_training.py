@@ -3,13 +3,13 @@ import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
-logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
-from genscai.models import AisuiteClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
+MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -74,80 +74,77 @@ Abstract:
 
 
 def load_test_data() -> pd.DataFrame:
-    with open(paths.data / 'modeling_papers.json', 'r') as f:
+    with open(paths.data / "modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
-    df1['is_modeling'] = True
+    df1["is_modeling"] = True
 
-    with open(paths.data / 'non_modeling_papers.json', 'r') as f:
+    with open(paths.data / "non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)
-    df2['is_modeling'] = False
+    df2["is_modeling"] = False
 
     return pd.concat([df1, df2])
 
 
 def test_classification(
-    model_client: ModelClient, prompt_template: str, df_data: pd.DataFrame) -> (pd.DataFrame, dict):
+    model_client: ModelClient, prompt_template: str, df_data: pd.DataFrame
+) -> tuple[pd.DataFrame, dict]:
     predict_modeling = []
 
-    print('testing prompt: ', end='')
+    print("testing prompt: ", end="")
 
     for paper in df_data.itertuples():
         prompt = prompt_template.format(abstract=paper.abstract)
         result = model_client.generate_text(prompt, CLASSIFICATION_GENERATE_KWARGS)
 
-        if 'yes' in result.lower():
+        if "yes" in result.lower():
             predict_modeling.append(True)
-        elif 'no' in result.lower():
+        elif "no" in result.lower():
             predict_modeling.append(False)
         else:
             predict_modeling.append(pd.NA)
 
-        print('.', end='', flush=True)
+        print(".", end="", flush=True)
 
     print()
 
-    df_data['predict_modeling'] = predict_modeling
+    df_data["predict_modeling"] = predict_modeling
 
-    true_pos = len(
-        df_data.query('is_modeling == True and predict_modeling == True')
-    )
-    true_neg = len(
-        df_data.query('is_modeling == False and predict_modeling == False')
-    )
+    true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
+    true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
 
     accuracy = (true_pos + true_neg) / len(df_data)
-    pos = len(df_data.query('predict_modeling == True'))
+    pos = len(df_data.query("predict_modeling == True"))
     precision = true_pos / pos if pos > 0 else 0
-    pos = len(df_data.query('is_modeling == True'))
+    pos = len(df_data.query("is_modeling == True"))
     recall = true_pos / pos if pos > 0 else 0
 
-    return df_data, {'accuracy': accuracy, 'precision': precision, 'recall': recall}
+    return df_data, {"accuracy": accuracy, "precision": precision, "recall": recall}
 
 
 def run_training():
-    logging.basicConfig(filename='training.log', level=logging.INFO)
-    logger.info(f'started: {MODEL_ID}')
+    logging.basicConfig(filename="training.log", level=logging.INFO)
+    logger.info(f"started: {MODEL_ID}")
 
     df_data = load_test_data()
-    df_data['predict_modeling'] = None
+    df_data["predict_modeling"] = None
 
-    print(f'loading model: {MODEL_ID}', flush=True)
+    print(f"loading model: {MODEL_ID}", flush=True)
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
 
-    catalog = PromptCatalog(paths.data / 'prompt_catalog.db')
+    catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt = catalog.retrieve_last(MODEL_ID)
 
     if prompt is None:
         prompt = Prompt(prompt=TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
-        print('using default prompt')
-        logger.info('using default prompt')
+        print("using default prompt")
+        logger.info("using default prompt")
     else:
-        print('using stored prompt')
-        logger.info('using stored prompt')
+        print("using stored prompt")
+        logger.info("using stored prompt")
 
     logger.info(prompt.prompt)
 
@@ -156,13 +153,15 @@ def run_training():
 
     # iterate using a basic hill climbing approach until a prompt is found that classifies w/100% accuracy
     while True:
-        df_data, metrics = test_classification(
-            model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
-        )
+        # don't test model if already have metrics
+        if prompt.metrics is None:
+            df_data, metrics = test_classification(
+                model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, df_data
+            )
 
-        prompt.metrics = metrics
+            prompt.metrics = metrics
 
-        out = f'results: iteration: {iteration}, mutation: {mutation} - precision: {metrics["precision"]:.2f}. recall: {metrics["recall"]:.2f}, accuracy: {metrics["accuracy"]:.2f}'
+        out = f'results: iteration: {iteration}, mutation: {mutation} - precision: {prompt.metrics["precision"]:.2f}. recall: {prompt.metrics["recall"]:.2f}, accuracy: {prompt.metrics["accuracy"]:.2f}'
         print(out)
         logger.info(out)
 
@@ -170,8 +169,8 @@ def run_training():
 
         # if accuracy has decreased, revert to the last prompt and try again
         # this needs to be strictly less than, since first iteration, prompt == last_prompt
-        if prompt.metrics['accuracy'] < last_prompt.metrics['accuracy']:
-            print('reverting to last prompt')
+        if prompt.metrics["accuracy"] < last_prompt.metrics["accuracy"]:
+            print("reverting to last prompt")
             prompt = last_prompt
             mutation -= 1
             continue
@@ -180,7 +179,7 @@ def run_training():
         catalog.store_prompt(prompt)
         last_prompt = prompt
 
-        df_bad = df_data.query('is_modeling != predict_modeling')
+        df_bad = df_data.query("is_modeling != predict_modeling")
 
         # stop iterating once accuracy is 100%
         if len(df_bad) == 0:
@@ -199,22 +198,23 @@ def run_training():
                 prompt=last_prompt.prompt, abstract=item.abstract
             )
 
-        print('mutating prompt')
-        logger.info('mutating prompt')
+        print("mutating prompt")
+        logger.info("mutating prompt")
         logger.info(mutation_prompt)
 
         # generate a new prompt using the mutation
-        mutated_prompt = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS).strip()
+        mutated_prompt = model_client.generate_text(
+            mutation_prompt, MUTATION_GENERATE_KWARGS
+        ).strip()
         prompt = Prompt(
-            model_id=MODEL_ID,
-            version=last_prompt.version + 1,
-            prompt=mutated_prompt
+            model_id=MODEL_ID, version=last_prompt.version + 1, prompt=mutated_prompt
         )
 
-        logger.info('mutated prompt')
+        logger.info("mutated prompt")
         logger.info(mutated_prompt)
 
-logger.debug(f'finished: {MODEL_ID}')
+
+logger.debug(f"finished: {MODEL_ID}")
 
 if __name__ == "__main__":
     run_training()

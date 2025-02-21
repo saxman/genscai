@@ -6,10 +6,10 @@ logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient
+from genscai.models import AisuiteClient as ModelClient
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_MISTRAL_NEMO_12B
+MODEL_ID = ModelClient.MODEL_GPT_4O
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,

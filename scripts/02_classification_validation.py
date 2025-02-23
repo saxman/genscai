@@ -85,9 +85,7 @@ def run_validation():
     recall = true_pos / len(df_data.query("is_modeling == True"))
     accuracy = (true_pos + true_neg) / len(df_data)
 
-    print(
-        f"\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}"
-    )
+    print(f"\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}")
     print(df_data.query("is_modeling != predict_modeling"))
 
     del model_client

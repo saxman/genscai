@@ -114,9 +114,9 @@ class HuggingFaceClient(ModelClient):
 
         messages = [{"role": "user", "content": prompt}]
 
-        input_ids = self.tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, return_tensors="pt"
-        ).to(self.model.device)
+        input_ids = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
+            self.model.device
+        )
 
         outputs = self.model.generate(input_ids, **generate_kwargs)
 
@@ -125,7 +125,7 @@ class HuggingFaceClient(ModelClient):
         return self.tokenizer.decode(response, skip_special_tokens=True)
 
     def print_model_info(self):
-        print(f"model : size : {self.model.get_memory_footprint() // 1024 ** 2} MB")
+        print(f"model : size : {self.model.get_memory_footprint() // 1024**2} MB")
 
         try:
             print(f"model : is quantized : {self.model.is_quantized}")
@@ -166,9 +166,9 @@ def print_cuda_device_info():
         print(f"device {i} : {pynvml.nvmlDeviceGetName(handle)}")
 
         info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        print(f"device {i} : mem total : {info.total // 1024 ** 2} MB")
-        print(f"device {i} : mem used  : {info.used // 1024 ** 2} MB")
-        print(f"device {i} : mem free  : {info.free // 1024 ** 2} MB")
+        print(f"device {i} : mem total : {info.total // 1024**2} MB")
+        print(f"device {i} : mem used  : {info.used // 1024**2} MB")
+        print(f"device {i} : mem free  : {info.free // 1024**2} MB")
 
 
 def test_model_classification(

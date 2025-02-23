@@ -5,9 +5,7 @@ from tinydb import TinyDB, Query
 
 import genscai
 
-HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"
-}
+HTTP_HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"}
 
 
 def retrieve_page(page_number, startdate="2024-01-01", enddate=""):
@@ -47,9 +45,7 @@ class MIDASRetriever:
         self.soup = None
         self.article_links = []
         self.articles = []
-        self.database_path = (
-            genscai.paths.data / "raw" if database_path is None else database_path
-        )
+        self.database_path = genscai.paths.data / "raw" if database_path is None else database_path
 
         self.last_page = self._calculate_pages()
 
@@ -77,7 +73,6 @@ class MIDASRetriever:
     def _create_links(self):
         self.article_links = []
         for i in tqdm(range(1, self.last_page)):
-
             for article in self.soup.find_all("article"):
                 link = article.find("a")
                 self.article_links.append(link.get("href"))

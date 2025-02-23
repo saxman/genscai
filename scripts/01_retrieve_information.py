@@ -46,12 +46,8 @@ def train_test_validate_split(df, test_size=0.15, validate_size=0.15, verbose=Fa
     else:
         validate = pl.DataFrame()
 
-    assert (
-        len(df) == train_size
-    ), "Somthing went wrong with the train-test-validate split"
-    assert (
-        len(df) + len(test) + len(validate) == n
-    ), "Somthing went wrong with the train-test-validate split"
+    assert len(df) == train_size, "Somthing went wrong with the train-test-validate split"
+    assert len(df) + len(test) + len(validate) == n, "Somthing went wrong with the train-test-validate split"
 
     if verbose:
         print(f"Train set size: {len(df)}")
@@ -93,11 +89,7 @@ def run_processor():
     df = df.with_columns(pl.col("title").map_elements(hash_str).alias("id"))
 
     # Create first author column
-    df = df.with_columns(
-        pl.col("reference")
-        .map_elements(lambda x: x.split(" ")[0])
-        .alias("first_author")
-    )
+    df = df.with_columns(pl.col("reference").map_elements(lambda x: x.split(" ")[0]).alias("first_author"))
     # drop dublicates using first author
     df = df.unique(subset=["title"], keep="last")  # can also subset by first_author
 

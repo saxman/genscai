@@ -134,7 +134,7 @@ def run_training():
             results_str = " ".join(map(str, df_data.predict_modeling))
             logger.info(f"test output:\n{results_str}")
 
-        out = f'results: iteration: {iteration}, mutation: {mutation} - precision: {prompt.metrics["precision"]:.2f}. recall: {prompt.metrics["recall"]:.2f}, accuracy: {prompt.metrics["accuracy"]:.2f}'
+        out = f"results: iteration: {iteration}, mutation: {mutation} - precision: {prompt.metrics['precision']:.2f}. recall: {prompt.metrics['recall']:.2f}, accuracy: {prompt.metrics['accuracy']:.2f}"
         print(out)
         logger.info(out)
 
@@ -157,21 +157,15 @@ def run_training():
         # randomly select an incorrect result for mutating the task prompt
         item = df_bad.sample().iloc[0]
         if item.is_modeling:
-            mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(
-                prompt=prompt.prompt, abstract=item.abstract
-            )
+            mutation_prompt = MUTATION_POS_PROMPT_TEMPLATE.format(prompt=prompt.prompt, abstract=item.abstract)
         else:
-            mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(
-                prompt=prompt.prompt, abstract=item.abstract
-            )
+            mutation_prompt = MUTATION_NEG_PROMPT_TEMPLATE.format(prompt=prompt.prompt, abstract=item.abstract)
 
         print("mutating prompt")
         logger.info(f"mutation prompt:\n{mutation_prompt}")
 
         # generate a new prompt using the mutation prompt
-        mutated_prompt = model_client.generate_text(
-            mutation_prompt, MUTATION_GENERATE_KWARGS
-        ).strip()
+        mutated_prompt = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS).strip()
 
         logger.info(f"mutated task prompt:\n{mutated_prompt}")
 
@@ -181,9 +175,7 @@ def run_training():
         catalog.store_prompt(prompt)
         last_prompt = prompt
 
-        prompt = Prompt(
-            model_id=MODEL_ID, version=last_prompt.version + 1, prompt=mutated_prompt
-        )
+        prompt = Prompt(model_id=MODEL_ID, version=last_prompt.version + 1, prompt=mutated_prompt)
 
     logger.debug(f"finished: {MODEL_ID}")
 

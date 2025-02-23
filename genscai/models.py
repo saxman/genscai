@@ -6,6 +6,8 @@ from transformers.utils import logging
 import ollama
 import aisuite
 import pynvml
+import pandas as pd
+from tqdm import tqdm
 
 logging.set_verbosity_error()
 
@@ -122,7 +124,7 @@ class HuggingFaceClient(ModelClient):
 
         return self.tokenizer.decode(response, skip_special_tokens=True)
 
-    def print_model_info():
+    def print_model_info(self):
         print(f"model : size : {self.model.get_memory_footprint() // 1024 ** 2} MB")
 
         try:
@@ -146,7 +148,7 @@ class HuggingFaceClient(ModelClient):
         print(f"model : on GPU (CUDA) : {param.is_cuda}")
         print(f"model : on GPU (MPS) : {param.is_mps}")
 
-    def print_device_map():
+    def print_device_map(self):
         pp = pprint.PrettyPrinter(indent=2)
         pp.pprint(self.model.hf_device_map)
 
@@ -167,3 +169,37 @@ def print_cuda_device_info():
         print(f"device {i} : mem total : {info.total // 1024 ** 2} MB")
         print(f"device {i} : mem used  : {info.used // 1024 ** 2} MB")
         print(f"device {i} : mem free  : {info.free // 1024 ** 2} MB")
+
+
+def test_model_classification(
+    model_client: ModelClient,
+    prompt_template: str,
+    generate_kwargs,
+    df_data: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict]:
+    predict_modeling = []
+
+    for i in tqdm(range(len(df_data)), desc="testing prompt"):
+        paper = df_data.iloc[i]
+        prompt = prompt_template.format(abstract=paper.abstract)
+        result = model_client.generate_text(prompt, generate_kwargs)
+
+        if "yes" in result.lower():
+            predict_modeling.append(True)
+        elif "no" in result.lower():
+            predict_modeling.append(False)
+        else:
+            predict_modeling.append(pd.NA)
+
+    df_data["predict_modeling"] = predict_modeling
+
+    true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
+    true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
+
+    accuracy = (true_pos + true_neg) / len(df_data)
+    pos = len(df_data.query("predict_modeling == True"))
+    precision = true_pos / pos if pos > 0 else 0
+    pos = len(df_data.query("is_modeling == True"))
+    recall = true_pos / pos if pos > 0 else 0
+
+    return df_data, {"accuracy": accuracy, "precision": precision, "recall": recall}

@@ -21,6 +21,7 @@ dependencies = [
     "tinydb",
     "openai",
     "sqlalchemy",
+    "tqdm",
     "docstring-parser" # requied by aisuite
 ]
 

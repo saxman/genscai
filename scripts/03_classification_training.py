@@ -131,7 +131,7 @@ def run_training():
 
             prompt.metrics = metrics
 
-            results_str = ' '.join(map(str, df_data.predict_modeling))
+            results_str = " ".join(map(str, df_data.predict_modeling))
             logger.info(f"test output:\n{results_str}")
 
         out = f'results: iteration: {iteration}, mutation: {mutation} - precision: {prompt.metrics["precision"]:.2f}. recall: {prompt.metrics["recall"]:.2f}, accuracy: {prompt.metrics["accuracy"]:.2f}'
@@ -185,8 +185,8 @@ def run_training():
             model_id=MODEL_ID, version=last_prompt.version + 1, prompt=mutated_prompt
         )
 
+    logger.debug(f"finished: {MODEL_ID}")
 
-logger.debug(f"finished: {MODEL_ID}")
 
 if __name__ == "__main__":
     run_training()

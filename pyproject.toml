@@ -29,8 +29,7 @@ dependencies = [
 # install with `pip install -e '.[dev]'`
 [project.optional-dependencies]
 dev = [
-    "black",
-    "black[jupyter]",
+    "ruff",
     "pytest",
     "ipykernel",
     "ipywidgets"
@@ -47,5 +46,6 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["genscai*"]
 
-[tool.black]
+[tool.ruff]
+line-length = 120
 target-version = ["py39", "py310", "py311", "py312", "py313"]

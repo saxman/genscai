@@ -2,7 +2,7 @@ import pandas as pd
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
-from genscai.models import load_classification_test_data
+from genscai.models import load_classification_test_data, test_model_classification
 
 MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 
@@ -12,7 +12,7 @@ MODEL_KWARGS = {
     "torch_dtype": "auto",
 }
 
-GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
+CLASSIFICATION_GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
 
 TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique, including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease, specifically in the context of estimating the probability of disease resurgence.
@@ -38,38 +38,14 @@ Abstract:
 
 def run_validation():
     df_data = load_classification_test_data()
-
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
-
-    results = {}
-    predict_modeling = []
-
     prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 
-    for paper in df_data.itertuples():
-        print(".", end="", flush=True)
+    df_data, metrics = test_model_classification(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
 
-        prompt = prompt_template.format(abstract=paper.abstract)
-        result = model_client.generate_text(prompt, GENERATE_KWARGS)
-
-        if "yes" in result.lower():
-            predict_modeling.append(True)
-        elif "no" in result.lower():
-            predict_modeling.append(False)
-        else:
-            print(f"ERROR: Unrecognized response: {result}")
-            predict_modeling.append(pd.NA)
-
-    df_data["predict_modeling"] = predict_modeling
-
-    true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
-    true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
-
-    precision = true_pos / len(df_data.query("predict_modeling == True"))
-    recall = true_pos / len(df_data.query("is_modeling == True"))
-    accuracy = (true_pos + true_neg) / len(df_data)
-
-    print(f"\nprecision: {precision:.2f}, recall: {recall:.2f}, accuracy: {accuracy:.2f}")
+    print(
+        f"results: precision: {metrics['precision']:.2f}. recall: {metrics['recall']:.2f}, accuracy: {metrics['accuracy']:.2f}"
+    )
     print(df_data.query("is_modeling != predict_modeling"))
 
     del model_client

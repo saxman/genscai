@@ -1,8 +1,8 @@
-import json
 import pandas as pd
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
+from genscai.models import load_classification_test_data
 
 MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 
@@ -36,24 +36,8 @@ Abstract:
 """
 
 
-def load_data():
-    with open(paths.data / "modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df1 = pd.json_normalize(data)
-    df1["is_modeling"] = True
-
-    with open(paths.data / "non_modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df2 = pd.json_normalize(data)
-    df2["is_modeling"] = False
-
-    return pd.concat([df1, df2])
-
-
 def run_validation():
-    df_data = load_data()
+    df_data = load_classification_test_data()
 
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
 

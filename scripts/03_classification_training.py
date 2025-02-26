@@ -1,5 +1,3 @@
-import json
-import pandas as pd
 import logging
 
 logger = logging.getLogger(__name__)
@@ -7,10 +5,10 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import AisuiteClient as ModelClient
-from genscai.models import test_model_classification
+from genscai.models import test_model_classification, load_classification_test_data
 from genscai.prompts import PromptCatalog, Prompt
 
-MODEL_ID = ModelClient.MODEL_QWEN_2_5_7B
+MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -78,27 +76,11 @@ Abstract:
 """.strip()
 
 
-def load_test_data() -> pd.DataFrame:
-    with open(paths.data / "modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df1 = pd.json_normalize(data)
-    df1["is_modeling"] = True
-
-    with open(paths.data / "non_modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df2 = pd.json_normalize(data)
-    df2["is_modeling"] = False
-
-    return pd.concat([df1, df2])
-
-
 def run_training():
     logging.basicConfig(filename="training.log", level=logging.INFO)
     logger.info(f"started: {MODEL_ID}")
 
-    df_data = load_test_data()
+    df_data = load_classification_test_data()
     df_data["predict_modeling"] = None
 
     print(f"loading model: {MODEL_ID}", flush=True)

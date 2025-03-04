@@ -28,9 +28,10 @@ Abstract:
 {abstract}
 """
 
+
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
-    df = pd.concat([df_train, df_test. df_validate])
+    df = pd.concat([df_train, df_test.df_validate])
 
     model_client = HuggingFaceClient(HuggingFaceClient.MODEL_LLAMA_3_1_8B, MODEL_KWARGS)
 
@@ -42,6 +43,7 @@ def run_classification():
     )
 
     del model_client
+
 
 if __name__ == "__main__":
     run_classification()

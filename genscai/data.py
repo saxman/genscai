@@ -4,6 +4,7 @@ import pandas as pd
 
 from genscai import paths
 
+
 def load_classification_test_data() -> pd.DataFrame:
     with open(paths.data / "modeling_papers.json", "r") as f:
         data = json.load(f)
@@ -18,6 +19,7 @@ def load_classification_test_data() -> pd.DataFrame:
     df2["is_modeling"] = False
 
     return pd.concat([df1, df2])
+
 
 def load_midas_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     fname = paths.data / "train.json"
@@ -40,5 +42,5 @@ def load_midas_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     else:
         df_test = pd.read_csv("hf://datasets/krosenf/midas-abstracts/test.csv")
         df_test.to_json(fname)
-    
+
     return df_train, df_test, df_validate

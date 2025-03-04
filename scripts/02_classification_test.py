@@ -37,7 +37,7 @@ Abstract:
 """
 
 
-def run_validation():
+def run_test():
     df_data = load_classification_test_data()
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
@@ -54,4 +54,4 @@ def run_validation():
 
 
 if __name__ == "__main__":
-    run_validation()
+    run_test()

@@ -8,9 +8,8 @@ def classify_papers(
     model_client: ModelClient,
     prompt_template: str,
     generate_kwargs,
-    df_data: pd.DataFrame,  
+    df_data: pd.DataFrame,
 ) -> pd.DataFrame:
-    
     predict_modeling = []
 
     for i in tqdm(range(len(df_data)), desc="classifying"):
@@ -24,14 +23,15 @@ def classify_papers(
             predict_modeling.append(False)
         else:
             predict_modeling.append(pd.NA)
-    
+
     df_data["predict_modeling"] = predict_modeling
 
     return df_data
 
 
-def test_classification(df_data: pd.DataFrame,) -> dict:
-
+def test_classification(
+    df_data: pd.DataFrame,
+) -> dict:
     true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
     true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
 

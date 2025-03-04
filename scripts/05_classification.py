@@ -4,6 +4,7 @@ import os.path
 from genscai.models import HuggingFaceClient
 from genscai import paths
 from genscai.models import classify_papers
+from genscai.data import load_midas_data
 from genscai.prompts import PromptCatalog
 
 MODEL_KWARGS = {
@@ -28,29 +29,8 @@ Abstract:
 """
 
 def run_classification():
-    fname = paths.data / "train.json"
-    if os.path.isfile(fname):
-        df_train = pd.read_json(fname)
-    else:
-        df_train = pd.read_csv("hf://datasets/krosenf/midas-abstracts/train.csv")
-        df_train.to_json(fname)
-
-    fname = paths.data / "validate.json"
-    if os.path.isfile(fname):
-        df_validate = pd.read_json(fname)
-    else:
-        df_validate = pd.read_csv("hf://datasets/krosenf/midas-abstracts/validate.csv")
-        df_validate.to_json(fname)
-
-    fname = paths.data / "test.json"
-    if os.path.isfile(fname):
-        df_test = pd.read_json(fname)
-    else:
-        df_test = pd.read_csv("hf://datasets/krosenf/midas-abstracts/test.csv")
-        df_test.to_json(fname)
-
-    df = df_validate
-    df = pd.concat([df_train, df_validate, df_test])
+    df_train, df_test, df_validate = load_midas_data()
+    df = pd.concat([df_train, df_test. df_validate])
 
     model_client = HuggingFaceClient(HuggingFaceClient.MODEL_LLAMA_3_1_8B, MODEL_KWARGS)
 

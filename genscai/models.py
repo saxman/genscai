@@ -8,8 +8,6 @@ import aisuite
 import pynvml
 import pandas as pd
 from tqdm import tqdm
-from genscai import paths
-import json
 
 logging.set_verbosity_error()
 
@@ -211,19 +209,3 @@ def test_classification(df_data: pd.DataFrame,) -> dict:
     recall = true_pos / pos if pos > 0 else 0
 
     return df_data, {"accuracy": accuracy, "precision": precision, "recall": recall}
-
-
-def load_classification_test_data() -> pd.DataFrame:
-    with open(paths.data / "modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df1 = pd.json_normalize(data)
-    df1["is_modeling"] = True
-
-    with open(paths.data / "non_modeling_papers.json", "r") as f:
-        data = json.load(f)
-
-    df2 = pd.json_normalize(data)
-    df2["is_modeling"] = False
-
-    return pd.concat([df1, df2])

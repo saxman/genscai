@@ -5,14 +5,14 @@ import pandas as pd
 from genscai import paths
 
 
-def load_classification_test_data() -> pd.DataFrame:
-    with open(paths.data / "modeling_papers.json", "r") as f:
+def load_classification_training_data() -> pd.DataFrame:
+    with open(paths.data / "training_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df1 = pd.json_normalize(data)
     df1["is_modeling"] = True
 
-    with open(paths.data / "non_modeling_papers.json", "r") as f:
+    with open(paths.data / "training_non_modeling_papers.json", "r") as f:
         data = json.load(f)
 
     df2 = pd.json_normalize(data)

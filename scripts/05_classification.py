@@ -1,6 +1,3 @@
-import pandas as pd
-import os.path
-
 from genscai.models import HuggingFaceClient
 from genscai import paths
 from genscai.classification import classify_papers
@@ -31,7 +28,8 @@ Abstract:
 
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
-    df = pd.concat([df_train, df_test.df_validate])
+    # df = pd.concat([df_train, df_test, df_validate])
+    df = df_validate
 
     model_client = HuggingFaceClient(HuggingFaceClient.MODEL_LLAMA_3_1_8B, MODEL_KWARGS)
 
@@ -41,6 +39,9 @@ def run_classification():
     df = classify_papers(
         model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS, df
     )
+
+    df = df.query("predict_modeling == True")
+    df.to_json(paths.data / 'modeling_papers.json', orient='records', lines=True)
 
     del model_client
 

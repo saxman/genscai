@@ -5,7 +5,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import HuggingFaceClient as ModelClient
-from genscai.data import load_classification_test_data
+from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog
 
@@ -34,7 +34,7 @@ Abstract:
 def run_tests():
     logging.basicConfig(filename="validation.log", level=logging.INFO)
 
-    df_data = load_classification_test_data()
+    df_data = load_classification_training_data()
     df_data["predict_modeling"] = None
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")

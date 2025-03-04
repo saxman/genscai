@@ -5,7 +5,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import AisuiteClient as ModelClient
-from genscai.data import load_classification_test_data
+from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog, Prompt
 
@@ -81,7 +81,7 @@ def run_training():
     logging.basicConfig(filename="training.log", level=logging.INFO)
     logger.info(f"started: {MODEL_ID}")
 
-    df_data = load_classification_test_data()
+    df_data = load_classification_training_data()
     df_data["predict_modeling"] = None
 
     print(f"loading model: {MODEL_ID}", flush=True)

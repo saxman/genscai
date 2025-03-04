@@ -157,12 +157,15 @@ cython_debug/
 # PyCharm
 .idea/
 
-# local database file created in the first notebook
+# local database files created in notebooks
 db.json
 vectors_db
 
-# project
+# transient data files
 db*.json
 test.json
 train.json
 validate.json
+
+# graphrag directory
+graphrag

@@ -2,7 +2,7 @@ import pandas as pd
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
-from genscai.data import load_classification_test_data
+from genscai.data import load_classification_training_data
 from genscai.classification import test_classification, classify_papers
 
 MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
@@ -38,7 +38,7 @@ Abstract:
 
 
 def run_test():
-    df_data = load_classification_test_data()
+    df_data = load_classification_training_data()
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 

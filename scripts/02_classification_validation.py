@@ -2,7 +2,8 @@ import pandas as pd
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
-from genscai.models import load_classification_test_data, test_classification, classify_papers
+from genscai.data import load_classification_test_data
+from genscai.classification import test_classification, classify_papers
 
 MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 

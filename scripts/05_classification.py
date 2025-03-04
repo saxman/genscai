@@ -3,7 +3,7 @@ import os.path
 
 from genscai.models import HuggingFaceClient
 from genscai import paths
-from genscai.models import classify_papers
+from genscai.classification import classify_papers
 from genscai.data import load_midas_data
 from genscai.prompts import PromptCatalog
 

@@ -5,7 +5,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import HuggingFaceClient as ModelClient
-from genscai.models import load_classification_test_data, classify_papers, test_classification
+from genscai.data import load_classification_test_data
+from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog
 
 MODEL_KWARGS = {

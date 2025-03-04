@@ -5,7 +5,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import AisuiteClient as ModelClient
-from genscai.models import test_model_classification, load_classification_test_data
+from genscai.models import load_classification_test_data, classify_papers, test_classification
 from genscai.prompts import PromptCatalog, Prompt
 
 MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
@@ -107,9 +107,8 @@ def run_training():
             prompt_str = prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE
             logger.info(f"task prompt template:\n{prompt_str}")
 
-            df_data, metrics = test_model_classification(
-                model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data
-            )
+            df_data = classify_papers(model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data)
+            metrics = test_classification(df_data)
 
             prompt.metrics = metrics
 

@@ -2,7 +2,7 @@ import pandas as pd
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
-from genscai.models import load_classification_test_data, test_model_classification
+from genscai.models import load_classification_test_data, test_classification, classify_papers
 
 MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
 
@@ -41,7 +41,8 @@ def run_validation():
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 
-    df_data, metrics = test_model_classification(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
+    df_data = classify_papers(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
+    metrics = test_classification(df_data)
 
     print(
         f"results: precision: {metrics['precision']:.2f}. recall: {metrics['recall']:.2f}, accuracy: {metrics['accuracy']:.2f}"

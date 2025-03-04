@@ -5,7 +5,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from genscai import paths
 from genscai.models import HuggingFaceClient as ModelClient
-from genscai.models import test_model_classification, load_classification_test_data
+from genscai.models import load_classification_test_data, classify_papers, test_classification
 from genscai.prompts import PromptCatalog
 
 MODEL_KWARGS = {
@@ -46,10 +46,10 @@ def run_tests():
 
         for prompt_model_id in prompt_model_ids:
             prompt = catalog.retrieve_last(prompt_model_id)
+            prompt_template = prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 
-            df_data, metrics = test_model_classification(
-                model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS, df_data
-            )
+            df_data = classify_papers(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
+            metrics = test_classification(df_data)
 
             print(f"prompt: {prompt_model_id}, model: {test_model_id}, metrics: {metrics}")
 

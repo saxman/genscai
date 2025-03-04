@@ -173,15 +173,16 @@ def print_cuda_device_info():
         print(f"device {i} : mem free  : {info.free // 1024**2} MB")
 
 
-def test_model_classification(
+def classify_papers(
     model_client: ModelClient,
     prompt_template: str,
     generate_kwargs,
-    df_data: pd.DataFrame,
-) -> tuple[pd.DataFrame, dict]:
+    df_data: pd.DataFrame,  
+) -> pd.DataFrame:
+    
     predict_modeling = []
 
-    for i in tqdm(range(len(df_data)), desc="testing prompt"):
+    for i in tqdm(range(len(df_data)), desc="classifying"):
         paper = df_data.iloc[i]
         prompt = prompt_template.format(abstract=paper.abstract)
         result = model_client.generate_text(prompt, generate_kwargs)
@@ -192,8 +193,13 @@ def test_model_classification(
             predict_modeling.append(False)
         else:
             predict_modeling.append(pd.NA)
-
+    
     df_data["predict_modeling"] = predict_modeling
+
+    return df_data
+
+
+def test_classification(df_data: pd.DataFrame,) -> dict:
 
     true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
     true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))

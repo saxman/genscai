@@ -5,7 +5,6 @@ from transformers import AutoModelForCausalLM
 from transformers.utils import logging
 import ollama
 import aisuite
-import pynvml
 
 logging.set_verbosity_error()
 
@@ -149,21 +148,3 @@ class HuggingFaceClient(ModelClient):
     def print_device_map(self):
         pp = pprint.PrettyPrinter(indent=2)
         pp.pprint(self.model.hf_device_map)
-
-
-def print_cuda_device_info():
-    pynvml.nvmlInit()
-
-    print(f"driver version : {pynvml.nvmlSystemGetDriverVersion()}")
-
-    devices = pynvml.nvmlDeviceGetCount()
-    print(f"device count : {devices}")
-
-    for i in range(devices):
-        handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-        print(f"device {i} : {pynvml.nvmlDeviceGetName(handle)}")
-
-        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        print(f"device {i} : mem total : {info.total // 1024**2} MB")
-        print(f"device {i} : mem used  : {info.used // 1024**2} MB")
-        print(f"device {i} : mem free  : {info.free // 1024**2} MB")

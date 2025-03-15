@@ -1,5 +1,6 @@
 import re
 from tinydb import TinyDB
+import pynvml
 
 
 class ReadOnlyTinyDB(TinyDB):
@@ -29,3 +30,21 @@ def extract_dates(s: str) -> list:
     else:
         print("No dates found in the file path.")
         return None
+
+
+def print_cuda_device_info():
+    pynvml.nvmlInit()
+
+    print(f"driver version : {pynvml.nvmlSystemGetDriverVersion()}")
+
+    devices = pynvml.nvmlDeviceGetCount()
+    print(f"device count : {devices}")
+
+    for i in range(devices):
+        handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+        print(f"device {i} : {pynvml.nvmlDeviceGetName(handle)}")
+
+        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        print(f"device {i} : mem total : {info.total // 1024**2} MB")
+        print(f"device {i} : mem used  : {info.used // 1024**2} MB")
+        print(f"device {i} : mem free  : {info.free // 1024**2} MB")

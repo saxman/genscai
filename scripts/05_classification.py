@@ -3,6 +3,7 @@ from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data
 from genscai.prompts import PromptCatalog
+import pandas as pd
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
@@ -25,16 +26,16 @@ Abstract:
 {abstract}
 """
 
+MODEL_ID = HuggingFaceClient.MODEL_LLAMA_3_1_8B
 
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
-    # df = pd.concat([df_train, df_test, df_validate])
-    df = df_validate
+    df = pd.concat([df_train, df_test, df_validate])
 
-    model_client = HuggingFaceClient(HuggingFaceClient.MODEL_LLAMA_3_1_8B, MODEL_KWARGS)
+    model_client = HuggingFaceClient(MODEL_ID, MODEL_KWARGS)
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
-    prompt = catalog.retrieve_last(HuggingFaceClient.MODEL_LLAMA_3_1_8B)
+    prompt = catalog.retrieve_last(MODEL_ID)
 
     df = classify_papers(
         model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS, df

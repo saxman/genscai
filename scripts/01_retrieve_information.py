@@ -6,8 +6,6 @@ and saves them to a database.
 import hashlib
 import sciris as sc
 import polars as pl
-from icecream import ic
-from pathlib import Path
 from collections import defaultdict
 import genscai
 

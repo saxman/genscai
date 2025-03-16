@@ -128,7 +128,7 @@ class HuggingFaceClient(ModelClient):
             print(f"model : is quantized : {self.model.is_quantized}")
             print(f"model : quantization method : {self.model.quantization_method}")
         except:
-            print(f"model : is quantized : False")
+            print("model : is quantized : False")
             pass
 
         try:

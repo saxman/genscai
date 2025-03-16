@@ -7,7 +7,7 @@ import pandas as pd
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "balanced",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "device_map": "balanced",
     "torch_dtype": "auto",
 }
 
@@ -30,8 +30,9 @@ MODEL_IDS = [
     HuggingFaceClient.MODEL_LLAMA_3_1_8B,
     HuggingFaceClient.MODEL_GEMMA_2_9B,
     HuggingFaceClient.MODEL_PHI_4_14B,
-    HuggingFaceClient.MODEL_MISTRAL_NEMO_12B
+    HuggingFaceClient.MODEL_MISTRAL_NEMO_12B,
 ]
+
 
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
@@ -48,7 +49,7 @@ def run_classification():
         )
 
         df = df.query("predict_modeling == True")
-        df.to_json(paths.data / f'modeling_papers_{i+3}.json', orient='records', lines=True)
+        df.to_json(paths.data / f"modeling_papers_{i}.json", orient="records", lines=True)
 
         del model_client
 

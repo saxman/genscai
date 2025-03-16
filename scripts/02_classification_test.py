@@ -1,6 +1,3 @@
-import pandas as pd
-
-from genscai import paths
 from genscai.models import OllamaClient as ModelClient
 from genscai.data import load_classification_training_data
 from genscai.classification import test_classification, classify_papers

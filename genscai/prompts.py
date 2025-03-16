@@ -1,5 +1,3 @@
-import genscai
-
 from sqlalchemy import (
     String,
     Integer,
@@ -9,7 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     desc,
 )
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 Base = declarative_base()
 

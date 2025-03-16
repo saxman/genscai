@@ -28,6 +28,7 @@ Abstract:
 
 MODEL_ID = HuggingFaceClient.MODEL_LLAMA_3_1_8B
 
+
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
     df = pd.concat([df_train, df_test, df_validate])
@@ -42,7 +43,7 @@ def run_classification():
     )
 
     df = df.query("predict_modeling == True")
-    df.to_json(paths.data / 'modeling_papers.json', orient='records', lines=True)
+    df.to_json(paths.data / "modeling_papers.json", orient="records", lines=True)
 
     del model_client
 

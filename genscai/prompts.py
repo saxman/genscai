@@ -36,8 +36,13 @@ class PromptCatalog:
         self.session.close()
 
     def store_prompt(self, prompt: Prompt):
-        self.session.add(prompt)
-        self.session.commit()
+        try:
+            self.session.add(prompt)
+        except:
+            self.session.rollback()
+            raise
+        else:
+            self.session.commit()
 
     def retrieve_last(self, model_id: str) -> Prompt:
         return self.session.query(Prompt).filter(Prompt.model_id == model_id).order_by(desc(Prompt.version)).first()
@@ -50,9 +55,11 @@ class PromptCatalog:
 
         try:
             rows_deleted = self.session.query(Prompt).filter(Prompt.model_id == model_id).delete()
-            self.session.commit()
         except:
             self.session.rollback()
+            raise
+        else:
+            self.session.commit()
 
         return rows_deleted
 

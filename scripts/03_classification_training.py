@@ -1,13 +1,13 @@
 import logging
 
-logger = logging.getLogger(__name__)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
 from genscai import paths
 from genscai.models import AisuiteClient as ModelClient
 from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog, Prompt
+
+logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
 

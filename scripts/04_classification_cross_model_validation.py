@@ -1,13 +1,13 @@
 import logging
 
-logger = logging.getLogger(__name__)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
 from genscai import paths
 from genscai.models import HuggingFaceClient as ModelClient
 from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog
+
+logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,

@@ -22,7 +22,12 @@ dependencies = [
     "openai",
     "sqlalchemy",
     "tqdm",
-    "docstring-parser" # requied by aisuite
+    "docstring-parser", # requied by aisuite
+    "pandas",
+    "numpy",
+    "seaborn",
+    "scipy", # force version bump to latest to support numpy 2
+    "pyarrow" # force version bump to latest to support numpy 2
 ]
 
 # optional pip dependencies

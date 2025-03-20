@@ -2,12 +2,20 @@ import pprint
 import torch
 from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM
-from transformers.utils import logging
+from transformers.utils import logging as log
 import ollama
 import aisuite
+import logging
 
-logging.set_verbosity_error()
+log.set_verbosity_error()
 
+logger = logging.getLogger(__name__)
+
+MODEL_KWARGS = {
+    "low_cpu_mem_usage": True,
+    "device_map": "balanced",
+    "torch_dtype": "auto",
+}
 
 class ModelClient:
     MODEL_LLAMA_3_1_8B = None
@@ -120,8 +128,9 @@ class HuggingFaceClient(ModelClient):
         outputs = self.model.generate(input_ids, **generate_kwargs)
 
         response = outputs[0][input_ids.shape[-1] :]
+        response_text = self.tokenizer.decode(response, skip_special_tokens=True)
 
-        return self.tokenizer.decode(response, skip_special_tokens=True)
+        return response_text
 
     def print_model_info(self):
         print(f"model : size : {self.model.get_memory_footprint() // 1024**2} MB")

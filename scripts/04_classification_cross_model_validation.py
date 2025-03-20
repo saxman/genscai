@@ -1,42 +1,19 @@
 import logging
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient
+from genscai.models import MODEL_KWARGS, HuggingFaceClient as ModelClient
 from genscai.data import load_classification_training_data
-from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog
+import genscai.classification as gc
+
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-MODEL_KWARGS = {
-    "low_cpu_mem_usage": True,
-    "device_map": "balanced_low_0", # supported options: "auto", "balanced", "balanced_low_0", "sequential"
-    "torch_dtype": "auto",
-}
-
-CLASSIFICATION_GENERATE_KWARGS = {
-    "max_new_tokens": 1,
-    "temperature": 0.01,
-    "do_sample": True,
-}
-
-TASK_PROMPT_IO_TEMPLATE = """
-If the abstract explicitly describes or references a disease modeling technique, answer "YES".
-If the abstract does not explicitly describe or reference a disease modeling technique, or it focuses on non-modeling analysis, answer "NO".
-Do not include any additional text or information with your response.
-
-Abstract:
-{abstract}
-"""
-
 
 def run_tests():
     """
-    Validates how well a prompt auto tuned by a model performs on classification tasks using different models.
-
-    Returns:
-        None
+    Validates how well a prompt tuned by a particular model performs on classification tasks using different models.
     """
 
     logging.basicConfig(filename="validation.log", level=logging.INFO)
@@ -47,7 +24,7 @@ def run_tests():
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt_model_ids = catalog.retrieve_model_ids()
 
-    # only test models that are 
+    # only test models that are local Hugging Face models, which are identified by having a "/" in the model ID
     test_model_ids = [x for x in prompt_model_ids if "/" in x]
 
     for test_model_id in test_model_ids:
@@ -56,10 +33,10 @@ def run_tests():
 
         for prompt_model_id in prompt_model_ids:
             prompt = catalog.retrieve_last(prompt_model_id)
-            prompt_template = prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE
+            prompt_template = prompt.prompt + gc.CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
 
-            df_data = classify_papers(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
-            df_data, metrics = test_classification(df_data)
+            df_data = gc.classify_papers(model_client, prompt_template, gc.CLASSIFICATION_GENERATE_KWARGS, df_data)
+            df_data, metrics = gc.test_paper_classifications(df_data)
 
             print(f"prompt: {prompt_model_id}, model: {test_model_id}, metrics: {metrics}")
 

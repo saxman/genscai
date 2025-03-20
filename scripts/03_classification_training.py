@@ -3,7 +3,7 @@ import logging
 from genscai import paths
 from genscai.models import HuggingFaceClient as ModelClient
 from genscai.data import load_classification_training_data
-from genscai.classification import classify_papers, test_classification
+from genscai.classification import classify_papers, test_paper_classifications
 from genscai.prompts import PromptCatalog, Prompt
 
 logger = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ def run_training():
             logger.info(f"task prompt template:\n{prompt_str}")
 
             df_data = classify_papers(model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data)
-            df_data, prompt.metrics = test_classification(df_data)
+            df_data, prompt.metrics = test_paper_classifications(df_data)
 
             results_str = " ".join(map(str, df_data.predict_modeling))
             logger.info(f"test output:\n{results_str}")

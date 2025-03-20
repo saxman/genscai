@@ -13,6 +13,7 @@ class ModelClient:
     MODEL_LLAMA_3_1_8B = None
     MODEL_LLAMA_3_2_3B = None
     MODEL_GEMMA_2_9B = None
+    MODEL_GEMMA_3_12B = None
     MODEL_PHI_4_14B = None
     MODEL_DEEPSEEK_R1_8B = None
     MODEL_MISTRAL_7B = None
@@ -85,6 +86,7 @@ class HuggingFaceClient(ModelClient):
     MODEL_LLAMA_3_2_3B = "meta-llama/Llama-3.2-3B-Instruct"
     MODEL_DEEPSEEK_R1_8B = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     MODEL_GEMMA_2_9B = "google/gemma-2-9b-it"
+    MODEL_GEMMA_3_12B = "google/gemma-3-12b-it"
     MODEL_PHI_4_14B = "microsoft/phi-4"
     MODEL_MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
     MODEL_MISTRAL_NEMO_12B = "mistralai/Mistral-Nemo-Instruct-2407"

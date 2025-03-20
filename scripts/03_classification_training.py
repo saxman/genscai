@@ -1,7 +1,7 @@
 import logging
 
 from genscai import paths
-from genscai.models import AisuiteClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_classification
 from genscai.prompts import PromptCatalog, Prompt
@@ -9,11 +9,11 @@ from genscai.prompts import PromptCatalog, Prompt
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-MODEL_ID = ModelClient.MODEL_GPT_4O_MINI
+MODEL_ID = ModelClient.MODEL_GEMMA_3_12B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "device_map": "balanced",
     "torch_dtype": "auto",
 }
 
@@ -78,6 +78,15 @@ Abstract:
 
 
 def run_training():
+    """
+    Executes the training process (prompt auto tuning) for classification using a hill climbing approach to optimize the prompt for 100% accuracy.
+
+    The function logs detailed information about the process and results, including the prompt templates, classification results, and metrics.
+
+    Raises:
+        Any exceptions raised during the execution of the training process.
+    """
+
     logging.basicConfig(filename="training.log", level=logging.INFO)
     logger.info(f"started: {MODEL_ID}")
 
@@ -109,9 +118,7 @@ def run_training():
             logger.info(f"task prompt template:\n{prompt_str}")
 
             df_data = classify_papers(model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data)
-            metrics = test_classification(df_data)
-
-            prompt.metrics = metrics
+            df_data, prompt.metrics = test_classification(df_data)
 
             results_str = " ".join(map(str, df_data.predict_modeling))
             logger.info(f"test output:\n{results_str}")

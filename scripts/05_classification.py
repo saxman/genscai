@@ -7,7 +7,7 @@ import pandas as pd
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "device_map": "balanced",
     "torch_dtype": "auto",
 }
 

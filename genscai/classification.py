@@ -31,7 +31,7 @@ def classify_papers(
 
 def test_classification(
     df_data: pd.DataFrame,
-) -> dict:
+) -> tuple[pd.DataFrame, dict]:
     true_pos = len(df_data.query("is_modeling == True and predict_modeling == True"))
     true_neg = len(df_data.query("is_modeling == False and predict_modeling == False"))
 

@@ -11,7 +11,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "device_map": "balanced_low_0", # supported options: "auto", "balanced", "balanced_low_0", "sequential"
     "torch_dtype": "auto",
 }
 
@@ -32,6 +32,13 @@ Abstract:
 
 
 def run_tests():
+    """
+    Validates how well a prompt auto tuned by a model performs on classification tasks using different models.
+
+    Returns:
+        None
+    """
+
     logging.basicConfig(filename="validation.log", level=logging.INFO)
 
     df_data = load_classification_training_data()
@@ -39,6 +46,8 @@ def run_tests():
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt_model_ids = catalog.retrieve_model_ids()
+
+    # only test models that are 
     test_model_ids = [x for x in prompt_model_ids if "/" in x]
 
     for test_model_id in test_model_ids:
@@ -50,7 +59,7 @@ def run_tests():
             prompt_template = prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 
             df_data = classify_papers(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
-            metrics = test_classification(df_data)
+            df_data, metrics = test_classification(df_data)
 
             print(f"prompt: {prompt_model_id}, model: {test_model_id}, metrics: {metrics}")
 

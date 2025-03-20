@@ -1,12 +1,12 @@
-from genscai.models import OllamaClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 from genscai.data import load_classification_training_data
 from genscai.classification import test_classification, classify_papers
 
-MODEL_ID = ModelClient.MODEL_LLAMA_3_1_8B
+MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
 
 MODEL_KWARGS = {
     "low_cpu_mem_usage": True,
-    "device_map": "sequential",  # load the model into GPUs sequentially, to avoid memory allocation issues with balancing
+    "device_map": "balanced",
     "torch_dtype": "auto",
 }
 
@@ -35,12 +35,18 @@ Abstract:
 
 
 def run_test():
+    """
+    Evaluate how well a model classifies scientific papers as describing or referencing disease modeling techniquest, or not, using test data.
+
+    Returns:
+        None
+    """
     df_data = load_classification_training_data()
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
     prompt_template = TASK_PROMPT_TEMPLATE + "\n\n" + TASK_PROMPT_IO_TEMPLATE
 
     df_data = classify_papers(model_client, prompt_template, CLASSIFICATION_GENERATE_KWARGS, df_data)
-    metrics = test_classification(df_data)
+    df_data, metrics = test_classification(df_data)
 
     print(
         f"results: precision: {metrics['precision']:.2f}. recall: {metrics['recall']:.2f}, accuracy: {metrics['accuracy']:.2f}"

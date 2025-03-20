@@ -22,21 +22,21 @@ def load_classification_training_data() -> pd.DataFrame:
 
 
 def load_midas_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    fname = paths.data / "train.json"
+    fname = paths.data / "midas_train.json"
     if os.path.isfile(fname):
         df_train = pd.read_json(fname)
     else:
         df_train = pd.read_csv("hf://datasets/krosenf/midas-abstracts/train.csv")
         df_train.to_json(fname)
 
-    fname = paths.data / "validate.json"
+    fname = paths.data / "midas_validate.json"
     if os.path.isfile(fname):
         df_validate = pd.read_json(fname)
     else:
         df_validate = pd.read_csv("hf://datasets/krosenf/midas-abstracts/validate.csv")
         df_validate.to_json(fname)
 
-    fname = paths.data / "test.json"
+    fname = paths.data / "midas_test.json"
     if os.path.isfile(fname):
         df_test = pd.read_json(fname)
     else:

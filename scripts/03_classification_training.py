@@ -1,7 +1,9 @@
 import logging
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient, MODEL_KWARGS
+import genscai.classification as gc
+from genscai.classification import CLASSIFICATION_TASK_PROMPT_TEMPLATE, CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
 from genscai.data import load_classification_training_data
 from genscai.classification import classify_papers, test_paper_classifications
 from genscai.prompts import PromptCatalog, Prompt
@@ -9,19 +11,7 @@ from genscai.prompts import PromptCatalog, Prompt
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-MODEL_ID = ModelClient.MODEL_GEMMA_3_12B
-
-MODEL_KWARGS = {
-    "low_cpu_mem_usage": True,
-    "device_map": "balanced",
-    "torch_dtype": "auto",
-}
-
-CLASSIFICATION_GENERATE_KWARGS = {
-    "max_new_tokens": 1,
-    "temperature": 0.01,
-    "do_sample": True,
-}
+MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
 
 MUTATION_GENERATE_KWARGS = {
     "max_new_tokens": 1024,
@@ -31,28 +21,13 @@ MUTATION_GENERATE_KWARGS = {
     "top_p": 0.95,
 }
 
-TASK_PROMPT_TEMPLATE = """
-Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique,
-including but not limited to mathematical, statistical, or computational methods used to simulate, analyze, predict, or interpret the dynamics of a disease,
-specifically in the context of estimating the probability of disease resurgence.
-""".strip()
-
-TASK_PROMPT_IO_TEMPLATE = """
-If the abstract explicitly describes or references a disease modeling technique, answer "YES".
-If the abstract does not explicitly describe or reference a disease modeling technique, or it focuses on non-modeling analysis, answer "NO".
-Do not include any additional text or information with your response.
-
-Abstract:
-{abstract}
-""".strip()
-
 MUTATION_POS_PROMPT_TEMPLATE = """
 Read the language model prompt and scientific paper abstract below. Expand the prompt so that a language model would correctly determine that the abstract
 explicitly refers to or uses a disease modeling technique.
 
 Do not include the names of specific diseases in the prompt. Do not include the abstract in the prompt.
 
-Only return the modified prompt. Do not include any additional text or information.
+Wrap the prompt in a <prompt> tag, e.g. <prompt>This is the mutated prompt</prompt>. Only include the prompt in the <prompt> tag.
 
 Prompt:
 {prompt}
@@ -67,7 +42,7 @@ DOES NOT explicitly refer to or use a disease modeling technique.
 
 Do not include the names of specific diseases in the prompt. Do not include the abstract in the prompt.
 
-Only return the modified prompt. Do not include any additional text or information.
+Wrap the prompt in a <prompt> tag, e.g. <prompt>This is the mutated prompt</prompt>. Only include the prompt in the <prompt> tag.
 
 Prompt:
 {prompt}
@@ -75,6 +50,16 @@ Prompt:
 Abstract:
 {abstract}
 """.strip()
+
+
+# for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens
+CLASSIFICATION_GENERATE_KWARGS = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
+CLASSIFICATION_GENERATE_KWARGS.update(
+    {
+        "max_new_tokens": 1024,
+        "temperature": 0.70,
+    }
+)
 
 
 def run_training():
@@ -100,7 +85,7 @@ def run_training():
     prompt = catalog.retrieve_last(MODEL_ID)
 
     if prompt is None:
-        prompt = Prompt(prompt=TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
+        prompt = Prompt(prompt=CLASSIFICATION_TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
         print("using default prompt template")
         logger.info(f"using default prompt template:\n{prompt.prompt}")
     else:
@@ -114,7 +99,7 @@ def run_training():
     while True:
         # don't test model if already have test metrics
         if prompt.metrics is None:
-            prompt_str = prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE
+            prompt_str = prompt.prompt + CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
             logger.info(f"task prompt template:\n{prompt_str}")
 
             df_data = classify_papers(model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data)
@@ -154,9 +139,12 @@ def run_training():
         logger.info(f"mutation prompt:\n{mutation_prompt}")
 
         # generate a new prompt using the mutation prompt
-        mutated_prompt = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS).strip()
+        result = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS)
+        logger.info(f"raw prompt mutation results:\n{result}")
 
-        logger.info(f"mutated task prompt:\n{mutated_prompt}")
+        # extract the prompt from the response
+        mutated_prompt = result.split("<prompt>")[-1].split("</prompt>")[0].strip()
+        logger.info(f"processed prompt mutation results:\n{mutated_prompt}")
 
         mutation += 1
 

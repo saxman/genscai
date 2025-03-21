@@ -1,37 +1,27 @@
-from genscai.models import HuggingFaceClient
+import pandas as pd
+from genscai.models import HuggingFaceClient, MODEL_KWARGS
+from genscai.classification import CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
+import genscai.classification as gc
 from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data
 from genscai.prompts import PromptCatalog
-import pandas as pd
-
-MODEL_KWARGS = {
-    "low_cpu_mem_usage": True,
-    "device_map": "balanced",
-    "torch_dtype": "auto",
-}
-
-CLASSIFICATION_GENERATE_KWARGS = {
-    "max_new_tokens": 1,
-    "temperature": 0.01,
-    "do_sample": True,
-}
-
-TASK_PROMPT_IO_TEMPLATE = """
-If the abstract explicitly describes or references a disease modeling technique, answer "YES".
-If the abstract does not explicitly describe or reference a disease modeling technique, or it focuses on non-modeling analysis, answer "NO".
-Do not include any additional text or information with your response.
-
-Abstract:
-{abstract}
-"""
 
 MODEL_IDS = [
-    HuggingFaceClient.MODEL_LLAMA_3_1_8B,
-    HuggingFaceClient.MODEL_GEMMA_2_9B,
-    HuggingFaceClient.MODEL_PHI_4_14B,
-    HuggingFaceClient.MODEL_MISTRAL_NEMO_12B,
+    # HuggingFaceClient.MODEL_LLAMA_3_1_8B,
+    # HuggingFaceClient.MODEL_GEMMA_2_9B,
+    # HuggingFaceClient.MODEL_PHI_4_14B,
+    # HuggingFaceClient.MODEL_MISTRAL_NEMO_12B,
+    HuggingFaceClient.MODEL_DEEPSEEK_R1_8B
 ]
+
+CLASSIFICATION_GENERATE_KWARGS = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
+CLASSIFICATION_GENERATE_KWARGS.update(
+    {
+        "max_new_tokens": 1024,
+        "temperature": 0.70,
+    }
+)
 
 
 def run_classification():
@@ -45,11 +35,14 @@ def run_classification():
         prompt = catalog.retrieve_last(model_id)
 
         df = classify_papers(
-            model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS, df
+            model_client,
+            prompt.prompt + CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
+            CLASSIFICATION_GENERATE_KWARGS,
+            df,
         )
 
         df = df.query("predict_modeling == True")
-        df.to_json(paths.data / f"modeling_papers_{i}.json", orient="records", lines=True)
+        df.to_json(paths.data / f"modeling_papers_{i + 4}.json", orient="records", lines=True)
 
         del model_client
 

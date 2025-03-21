@@ -17,6 +17,7 @@ MODEL_KWARGS = {
     "torch_dtype": "auto",
 }
 
+
 class ModelClient:
     MODEL_LLAMA_3_1_8B = None
     MODEL_LLAMA_3_2_3B = None

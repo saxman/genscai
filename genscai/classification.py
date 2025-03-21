@@ -6,11 +6,7 @@ from genscai.models import ModelClient
 
 logger = logging.getLogger(__name__)
 
-CLASSIFICATION_GENERATE_KWARGS = {
-    "max_new_tokens": 1,
-    "temperature": 0.01,
-    "do_sample": True
-}
+CLASSIFICATION_GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
 
 CLASSIFICATION_TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique,
@@ -38,17 +34,19 @@ def classify_papers(
     for i in tqdm(range(len(df_data)), desc="classifying"):
         paper = df_data.iloc[i]
         prompt = prompt_template.format(abstract=paper.abstract)
-        result = model_client.generate_text(prompt, generate_kwargs)
 
-        logger.info(f"classification result: {result}")
+        result = model_client.generate_text(prompt, generate_kwargs)
+        logger.info(f"raw classificaiton results: {result}")
+        result = result.split("</think>")[-1].strip()  # remove thinking output for reasoning models (DeepsSeek R1)
+        logger.info(f"processed classification results: {result}")
 
         if "[yes]" in result.lower():
             predict_modeling.append(True)
         elif "[no]" in result.lower():
             predict_modeling.append(False)
         else:
-            predict_modeling.append(pd.NA)
-        
+            raise ValueError(f"unexpected classification result: {result}")
+
         logger.info(f"classification: {predict_modeling[-1]}")
 
     df_data["predict_modeling"] = predict_modeling

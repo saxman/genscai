@@ -1,12 +1,16 @@
 import logging
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient, MODEL_KWARGS
-import genscai.classification as gc
-from genscai.classification import CLASSIFICATION_TASK_PROMPT_TEMPLATE, CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
+from genscai.models import MODEL_KWARGS, HuggingFaceClient as ModelClient
+from genscai.classification import (
+    CLASSIFICATION_TASK_PROMPT_TEMPLATE,
+    CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
+    classify_papers,
+    test_paper_classifications,
+)
 from genscai.data import load_classification_training_data
-from genscai.classification import classify_papers, test_paper_classifications
 from genscai.prompts import PromptCatalog, Prompt
+import genscai.classification as gc
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)

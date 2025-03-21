@@ -139,18 +139,18 @@ class HuggingFaceClient(ModelClient):
         try:
             print(f"model : is quantized : {self.model.is_quantized}")
             print(f"model : quantization method : {self.model.quantization_method}")
-        except:
+        except AttributeError:
             print("model : is quantized : False")
             pass
 
         try:
             print(f"model : 8-bit quantized : {self.model.is_loaded_in_8bit}")
-        except:
+        except AttributeError:
             pass
 
         try:
             print(f"model : 4-bit quantized : {self.model.is_loaded_in_4bit}")
-        except:
+        except AttributeError:
             pass
 
         param = next(self.model.parameters())

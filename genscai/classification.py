@@ -6,7 +6,7 @@ from genscai.models import ModelClient
 
 logger = logging.getLogger(__name__)
 
-CLASSIFICATION_GENERATE_KWARGS = {"max_new_tokens": 1, "temperature": 0.01, "do_sample": True}
+CLASSIFICATION_GENERATE_KWARGS = {"max_new_tokens": 3, "temperature": 0.01, "do_sample": True}
 
 CLASSIFICATION_TASK_PROMPT_TEMPLATE = """
 Read the following scientific paper abstract. Based on the content, determine if the paper explicitly refers to or uses a disease modeling technique,
@@ -30,6 +30,7 @@ def classify_papers(
     df_data: pd.DataFrame,
 ) -> pd.DataFrame:
     predict_modeling = []
+    df = df_data.copy()
 
     for i in tqdm(range(len(df_data)), desc="classifying"):
         paper = df_data.iloc[i]
@@ -49,9 +50,9 @@ def classify_papers(
 
         logger.info(f"classification: {predict_modeling[-1]}")
 
-    df_data["predict_modeling"] = predict_modeling
+    df["predict_modeling"] = predict_modeling
 
-    return df_data
+    return df
 
 
 def test_paper_classifications(

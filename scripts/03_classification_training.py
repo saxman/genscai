@@ -9,61 +9,14 @@ from genscai.classification import (
     test_paper_classifications,
 )
 from genscai.data import load_classification_training_data
-from genscai.prompts import PromptCatalog, Prompt
+from genscai import PromptCatalog, Prompt
+from genscai.training import MUTATION_POS_PROMPT_TEMPLATE, MUTATION_NEG_PROMPT_TEMPLATE, MUTATION_GENERATE_KWARGS
 import genscai.classification as gc
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
-
-MUTATION_GENERATE_KWARGS = {
-    "max_new_tokens": 1024,
-    "do_sample": True,
-    "temperature": 0.75,
-    "top_k": 50,
-    "top_p": 0.95,
-}
-
-MUTATION_POS_PROMPT_TEMPLATE = """
-Read the language model prompt and scientific paper abstract below. Expand the prompt so that a language model would correctly determine that the abstract
-explicitly refers to or uses a disease modeling technique.
-
-Do not include the names of specific diseases in the prompt. Do not include the abstract in the prompt.
-
-Wrap the prompt in a <prompt> tag, e.g. <prompt>This is the mutated prompt</prompt>. Only include the prompt in the <prompt> tag.
-
-Prompt:
-{prompt}
-
-Abstract:
-{abstract}
-""".strip()
-
-MUTATION_NEG_PROMPT_TEMPLATE = """
-Read the language model prompt and scientific paper abstract below. Expand the prompt so that a language model would correctly determine that the abstract
-DOES NOT explicitly refer to or use a disease modeling technique.
-
-Do not include the names of specific diseases in the prompt. Do not include the abstract in the prompt.
-
-Wrap the prompt in a <prompt> tag, e.g. <prompt>This is the mutated prompt</prompt>. Only include the prompt in the <prompt> tag.
-
-Prompt:
-{prompt}
-
-Abstract:
-{abstract}
-""".strip()
-
-
-# for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens
-CLASSIFICATION_GENERATE_KWARGS = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
-CLASSIFICATION_GENERATE_KWARGS.update(
-    {
-        "max_new_tokens": 1024,
-        "temperature": 0.70,
-    }
-)
 
 
 def run_training():
@@ -84,6 +37,16 @@ def run_training():
 
     print(f"loading model: {MODEL_ID}", flush=True)
     model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
+
+    generate_kwargs = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
+    # for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens
+    if model_client.model_id == ModelClient.MODEL_DEEPSEEK_R1_8B:
+        generate_kwargs.update(
+            {
+                "max_new_tokens": 1024,
+                "temperature": 0.70,
+            }
+        )
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt = catalog.retrieve_last(MODEL_ID)
@@ -106,7 +69,7 @@ def run_training():
             prompt_str = prompt.prompt + CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
             logger.info(f"task prompt template:\n{prompt_str}")
 
-            df_data = classify_papers(model_client, prompt_str, CLASSIFICATION_GENERATE_KWARGS, df_data)
+            df_data = classify_papers(model_client, prompt_str, generate_kwargs, df_data)
             df_data, prompt.metrics = test_paper_classifications(df_data)
 
             results_str = " ".join(map(str, df_data.predict_modeling))

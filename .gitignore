@@ -169,3 +169,6 @@ validate.json
 
 # graphrag directory
 graphrag
+
+# transitent output files
+output/

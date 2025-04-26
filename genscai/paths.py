@@ -7,3 +7,6 @@ data = root / "data"
 
 # Path to the figures directory
 figures = root / "figures"
+
+# Path to the output directory
+output = root / "output"

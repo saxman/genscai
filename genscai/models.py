@@ -104,7 +104,7 @@ class HuggingFaceClient(ModelClient):
     def __init__(self, model_id, model_kwargs):
         super().__init__(model_id, model_kwargs)
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id, attn_implementation="eager")
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
 
     def __del__(self):

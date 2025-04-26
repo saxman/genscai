@@ -16,7 +16,7 @@ including but not limited to mathematical, statistical, or computational methods
 CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE = """
 If the abstract describes or references any of these methods or similar approaches, answer "YES".
 If the abstract focuses on non-modeling analysis, such as reporting observational data without reference to disease modeling techniques, answer "NO".
-Wrap your final answer in square braces, e.g. [YES] or [NO].
+Wrap your final answer in square braces, e.g. [YES] or [NO]. Only include [YES] or [NO] in your answer.
 
 Abstract:
 {abstract}

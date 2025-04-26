@@ -31,7 +31,7 @@ def run_classification():
 
         df = classify_papers(
             model_client,
-            prompt.prompt + CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
+            prompt.prompt + '\n' + CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
             CLASSIFICATION_GENERATE_KWARGS,
             df,
         )

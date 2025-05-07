@@ -157,18 +157,11 @@ cython_debug/
 # PyCharm
 .idea/
 
-# local database files created in notebooks
-db.json
-vectors_db
-
 # transient data files
 db*.json
 test.json
 train.json
 validate.json
-
-# graphrag directory
-graphrag
 
 # transitent output files
 output/

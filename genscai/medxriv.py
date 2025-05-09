@@ -11,7 +11,7 @@ def retrieve_articles(start_date, end_date):
     next_page = 0
 
     while True:
-        a, next_page = retrieve_articles(start_date, end_date, next_page)
+        a, next_page = retrieve_articles_by_page(start_date, end_date, next_page)
         articles.extend(a)
         if next_page is None:
             break
@@ -37,7 +37,7 @@ def retrieve_articles_by_page(start_date, end_date, page=0):
     response = requests.post(url, headers=HTTP_HEADERS)
 
     if response.status_code != 200:
-        raise Exception(f"Error fetching paper details: {response.status_code} - {response.text}")
+        raise Exception(f"Error fetching list of articles: {response.status_code} - {response.text}")
 
     soup = BeautifulSoup(response.text, "html.parser")
     articles = soup.find_all("li", class_="search-result")
@@ -73,7 +73,7 @@ def retrieve_article_details(doi):
     response = requests.get(url, headers=HTTP_HEADERS)
 
     if response.status_code != 200:
-        raise Exception(f"Error fetching paper details: {response.status_code} - {response.text}")
+        raise Exception(f"Error fetching article details: {response.status_code} - {response.text}")
 
     return response.json()["collection"][0]
 
@@ -87,8 +87,8 @@ def run_retrieval():
     for article in articles:
         print(article)
 
-    # paper = retrieve_article_details(papers[0]["doi"])
-    # print(paper)
+    article = retrieve_article_details(articles[0]["doi"])
+    print(article)
 
 
 if __name__ == "__main__":

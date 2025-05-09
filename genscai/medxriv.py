@@ -1,26 +1,39 @@
 import requests
+import urllib.parse
 from bs4 import BeautifulSoup
 
 
 HTTP_HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"}
 
 
-def retrieve_papers(start_date, end_date):
+def retrieve_articles(start_date, end_date):
+    articles = []
+    next_page = 0
+
+    while True:
+        a, next_page = retrieve_articles(start_date, end_date, next_page)
+        articles.extend(a)
+        if next_page is None:
+            break
+
+    return articles
+
+
+def retrieve_articles_by_page(start_date, end_date, page=0):
     base_url = "https://www.medrxiv.org/search/"
 
     query_parts = [
-        "jcode%3Amedrxiv",
-        "subject_collection_code%3AInfectious%20Diseases%20%28except%20HIV%252FAIDS%29",
-        f"limit_from%3A{start_date}",
-        f"limit_to%3A{end_date}",
-        "sort%3Apublication-date",
-        "direction%3Adescending",
-        "format_result%3Acondensed",
-        "numresults%3A75",
+        "jcode:medrxiv",
+        "subject_collection_code:Infectious Diseases (except HIV%2FAIDS)",
+        f"limit_from:{start_date}",
+        f"limit_to:{end_date}",
+        "sort:publication-date",
+        "direction:descending",
+        "format_result:condensed",
+        "numresults:75",  # can be up to 75
     ]
 
-    url = base_url + "%20".join(query_parts)
-
+    url = base_url + urllib.parse.quote(" ".join(query_parts)) + f"?page={page}"
     response = requests.post(url, headers=HTTP_HEADERS)
 
     if response.status_code != 200:
@@ -39,10 +52,21 @@ def retrieve_papers(start_date, end_date):
 
         results.append(result)
 
-    return results
+    next_page = None
+    pager_element = soup.find("ul", class_="pager-items")
+
+    # if there are multiple pages...
+    if pager_element:
+        last_pager_item_anchor_element = pager_element.find("li", class_="last").find("a")
+
+        # if the element of the last page includes an anchor, we're not on the last page yet
+        if last_pager_item_anchor_element:
+            next_page = page + 1
+
+    return (results, next_page)
 
 
-def retrieve_paper_details(doi):
+def retrieve_article_details(doi):
     server = "medrxiv"
     url = f"https://api.medrxiv.org/details/{server}/{doi}/na/json"
 
@@ -58,14 +82,13 @@ def run_retrieval():
     start_date = "2025-05-01"
     end_date = "2025-05-07"
 
-    print(f"Retrieving MedRxiv articles from {start_date} to {end_date}.")
+    articles = retrieve_articles(start_date, end_date)
 
-    papers = retrieve_papers(start_date, end_date)
-    for paper in papers:
-        print(paper)
+    for article in articles:
+        print(article)
 
-    paper = retrieve_paper_details(papers[0]["doi"])
-    print(paper)
+    # paper = retrieve_article_details(papers[0]["doi"])
+    # print(paper)
 
 
 if __name__ == "__main__":

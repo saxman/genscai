@@ -13,9 +13,7 @@ torch.classes.__path__ = []
 
 model_id = "meta-llama/Llama-3.1-8B-Instruct"
 chat_db_path = "chat_db.json"
-
 generate_kwargs = {"do_sample": True, "temperature": 0.7, "top_k": 50, "top_p": 0.95}
-
 messages = None
 
 def get_current_temperature(location: str) -> float:
@@ -58,7 +56,7 @@ if "messages" not in st.session_state:
 if "pipeline" not in st.session_state:
     tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
     st.session_state.streamer = streamer
 
     pipeline = pipeline(
@@ -71,17 +69,11 @@ if "pipeline" not in st.session_state:
         max_new_tokens=1024,
     )
 
-    terminators = [
-        pipeline.tokenizer.eos_token_id,
-        pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
-    ]
-
     st.session_state.pipeline = pipeline
 
     # Send the system message to the model
     pipeline(
         st.session_state.messages,
-        eos_token_id=terminators,
         kwargs=generate_kwargs,
     )
 
@@ -107,14 +99,8 @@ if prompt := st.chat_input("What's up?"):
 
     pipeline = st.session_state.pipeline
 
-    terminators = [
-        pipeline.tokenizer.eos_token_id,
-        pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
-    ]
-
     model_kwargs = dict(
         text_inputs=st.session_state.messages,
-        eos_token_id=terminators,
         kwargs=generate_kwargs,
     )
 

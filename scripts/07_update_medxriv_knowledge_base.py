@@ -13,7 +13,7 @@ def retrieve_and_store_raw_articles(year):
     print(f"Writing {len(articles)} articles to file")
     with open(paths.output / f"medxriv_{year}.json", "w") as fout:
         json.dump(articles, fout)
-    
+
     return articles
 
 
@@ -27,7 +27,7 @@ def store_articles_in_chroma(articles):
 
     documents = [x["abstract"] for x in articles]
     ids = [x["doi"] for x in articles]
-    metadatas = [{k: v for k, v in item.items() if k != 'doi' and k != 'abstract'} for item in articles]
+    metadatas = [{k: v for k, v in item.items() if k != "doi" and k != "abstract"} for item in articles]
 
     collection.add(documents=documents, ids=ids, metadatas=metadatas)
 

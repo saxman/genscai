@@ -106,11 +106,13 @@ def retrieve_article_details(doi) -> dict:
     response = requests.get(url, headers=HTTP_HEADERS)
 
     if response.status_code != 200:
-        raise Exception(f"Error fetching article details for DOI {doi}: Invalid HTTP response: {response.status_code} - {response.text}")
+        raise Exception(
+            f"Error fetching article details for DOI {doi}: Invalid HTTP response: {response.status_code} - {response.text}"
+        )
 
     if response.json()["collection"] is None:
         raise Exception(f"Error fetching article details for DOI {doi}: No collection element in JSON response")
-    
+
     if len(response.json()["collection"]) == 0:
         raise Exception(f"Error fetching article details for DOI {doi}: No article details in JSON response")
 

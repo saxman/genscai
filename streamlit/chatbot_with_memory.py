@@ -1,3 +1,5 @@
+from genscai import paths
+
 import streamlit as st
 
 from transformers import AutoTokenizer
@@ -12,23 +14,9 @@ import torch
 torch.classes.__path__ = []
 
 model_id = "meta-llama/Llama-3.1-8B-Instruct"
-chat_db_path = "chat_db.json"
+chat_db_path = paths.output / "chat_db.json"
 generate_kwargs = {"do_sample": True, "temperature": 0.7, "top_k": 50, "top_p": 0.95}
 messages = None
-
-def get_current_temperature(location: str) -> float:
-    """
-    Get the current temperature at a location.
-    
-    Args:
-        location: The location to get the temperature for, in the format "City, Country"
-    Returns:
-        The current temperature at the specified location in the specified units, as a float.
-    """
-    print(location)
-    return 22.
-
-tools = [get_current_temperature]
 
 # If this is a new chat session, get the context of the last conversation, and create a document in the db for the current session
 if "doc_id" not in st.session_state:
@@ -48,8 +36,7 @@ if "messages" not in st.session_state:
         st.session_state.messages = [
             {
                 "role": "system",
-                "content": """You are a friendly chatbot that assists the user with research in infectious diseases and infectious disease modeling.
-                You are not allowed to answer any questions that are not related to these topics.""",
+                "content": "You are a friendly chatbot that assists the user with research in infectious diseases and infectious disease modeling.",
             }
         ]
 

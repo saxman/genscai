@@ -36,13 +36,31 @@ def retrieve_current_disease_research(search_request: str) -> list[dict]:
         Current research in infectious diseases and disease modeling for the given topic.
     """
 
-    client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
-    collection = client.get_collection(name="medxriv")
-    results = collection.query(query_texts=[search_request], n_results=5)
-
     print(f"Search request: {search_request}")
 
-    return results
+    client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
+    collection = client.get_collection(name="medxriv_chunked")
+    results = collection.query(query_texts=[search_request], n_results=10)
+
+    ids = [x for x in results["ids"][0]]
+    abstracts = [x for x in results["documents"][0]]
+    metadata = [x for x in results["metadatas"][0]]
+
+    articles = []
+    id_set = set()
+    for i in range(len(ids)):
+        id = ids[i].split(":")[0]
+
+        if id in id_set:
+            continue
+
+        id_set.add(id)
+
+        metadata[i]["doi"] = id
+        metadata[i]["abstract"] = abstracts[i]
+        articles.append(metadata[i])
+
+    return articles
 
 
 agent_tools = [retrieve_current_disease_research]
@@ -99,12 +117,7 @@ def stream_response(streamer):
 
     tool_return = agent_tools[tool_index](**tool_parameters)
 
-    abstracts = [x for x in tool_return["documents"][0]]
-    ids = [x for x in tool_return["ids"][0]]
-    titles = [x["title"] for x in tool_return["metadatas"][0]]
-    authors = [x["authors"] for x in tool_return["metadatas"][0]]
-
-    content = "\n\n".join(abstracts)
+    content = "\n\n".join([x["abstract"] for x in tool_return])
     st.session_state.messages.append({"role": "tool", "name": f"{tool_name}", "content": f"{content}"})
 
     generate_kwargs = {
@@ -125,9 +138,9 @@ def stream_response(streamer):
 
     yield "\n\n**References:**"
 
-    # Stream the references for the response
-    for i in range(len(ids)):
-        yield f"\n* [{titles[i]}](https://www.medrxiv.org/content/{ids[i]}). {authors[i]}.\n"
+    # Stream the top 5 references for the response
+    for article in tool_return[:5]:
+        yield f"\n* [{article['title']}](https://www.medrxiv.org/content/{article['doi']}). {article['authors']}, {article['date'].split('-')[0]}"
 
 
 def process_messages(tools=None) -> None:
@@ -156,7 +169,7 @@ def process_messages(tools=None) -> None:
 
 
 with st.sidebar:
-    st.title("IDM Chat")
+    st.title("IDM Research Assistant")
     st.write("Discuss infectious disease modeling with access to current disease modeling research.")
 
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.1, step=0.01)

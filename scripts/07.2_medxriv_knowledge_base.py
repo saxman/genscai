@@ -2,6 +2,7 @@ from genscai import paths
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 import json
+from tqdm import tqdm
 
 
 def store_articles(articles):
@@ -23,13 +24,13 @@ def store_article_chunks(articles):
     client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
 
     try:
-        collection = client.create_collection(name="medxriv_chunked")
+        collection = client.create_collection(name="medxriv_chunked_256_cosine", metadata={"hnsw:space": "cosine"})
     except Exception:
-        collection = client.get_collection(name="medxriv_chunked")
+        collection = client.get_collection(name="medxriv_chunked_256_cosine")
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=50)
 
-    for article in articles:
+    for article in tqdm(articles):
         chunks = text_splitter.split_text(article["abstract"])
         ids = [f"{article['doi']}:{i}" for i in range(len(chunks))]
         metadatas = [{k: v for k, v in article.items() if k != "doi" and k != "abstract"} for _ in chunks]
@@ -42,7 +43,7 @@ if __name__ == "__main__":
         with open(paths.output / f"medxriv_{year}.json", "r") as fin:
             articles = json.load(fin)
 
-        print(f"Storing {len(articles)} articles for {year} in ChromaDB")
+        print(f"Storing {len(articles)} articles for year {year} in Chroma database")
 
         # store_articles(articles)
         store_article_chunks(articles)

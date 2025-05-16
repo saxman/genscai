@@ -39,13 +39,15 @@ def retrieve_current_disease_research(search_request: str) -> list[dict]:
     print(f"Search request: {search_request}")
 
     client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
-    collection = client.get_collection(name="medxriv_chunked")
+    collection = client.get_collection(name="medxriv_chunked_256_cosine")
     results = collection.query(query_texts=[search_request], n_results=10)
 
     ids = [x for x in results["ids"][0]]
     abstracts = [x for x in results["documents"][0]]
     metadata = [x for x in results["metadatas"][0]]
 
+    # Each article has multiple chunks, and each chunk id is the article's doi with an index appended to it.
+    # Therefore, we need to remove the number and keep only one copy of the article.
     articles = []
     id_set = set()
     for i in range(len(ids)):

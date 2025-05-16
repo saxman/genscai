@@ -26,6 +26,9 @@ dependencies = [
     "pandas",
     "numpy",
     "seaborn",
+    "chromadb",
+    "langchain-text-splitters",
+    "streamlit",
     "scipy", # force version bump to latest to support numpy 2
     "pyarrow" # force version bump to latest to support numpy 2
 ]

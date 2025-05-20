@@ -11,9 +11,11 @@ import json
 import torch
 import chromadb
 
+# Avoid torch RuntimeError
 torch.classes.__path__ = []
 
 model_id = "meta-llama/Llama-3.1-8B-Instruct"
+knowledge_base = "medrxiv_chunked_256_cosine"
 
 system_message = """
 You are a friendly chatbot that assists the user with research in infectious diseases and infectious disease modeling.
@@ -26,7 +28,7 @@ Do not provide references in your response, unless the user specifically asks fo
 skip_message_rendering = False
 
 
-def retrieve_current_disease_research(search_request: str) -> list[dict]:
+def get_research_articles(search_request: str) -> list[dict]:
     """
     Get the current research in infectious diseases and disease modeling per a given search request.
 
@@ -39,7 +41,7 @@ def retrieve_current_disease_research(search_request: str) -> list[dict]:
     print(f"Search request: {search_request}")
 
     client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
-    collection = client.get_collection(name="medxriv_chunked_256_cosine")
+    collection = client.get_collection(name=knowledge_base)
     results = collection.query(query_texts=[search_request], n_results=10)
 
     ids = [x for x in results["ids"][0]]
@@ -47,7 +49,7 @@ def retrieve_current_disease_research(search_request: str) -> list[dict]:
     metadata = [x for x in results["metadatas"][0]]
 
     # Each article has multiple chunks, and each chunk id is the article's doi with an index appended to it.
-    # Therefore, we need to remove the number and keep only one copy of the article.
+    # Therefore, we need to remove the index from the id and keep only one copy of the article.
     articles = []
     id_set = set()
     for i in range(len(ids)):
@@ -65,7 +67,7 @@ def retrieve_current_disease_research(search_request: str) -> list[dict]:
     return articles
 
 
-agent_tools = [retrieve_current_disease_research]
+agent_tools = [get_research_articles]
 
 
 def generate(model, tokenizer, streamer, messages, tools) -> None:
@@ -87,7 +89,12 @@ def generate(model, tokenizer, streamer, messages, tools) -> None:
     )
 
 
-def stream_response(streamer):
+def process_response(streamer):
+    """
+    This function processes the response from the model. If the model is calling a tool, it will call the tool and return the results.
+    If the model is not calling a tool, it will return the response as is.
+    """
+
     tool_response = ""
 
     for text in streamer:
@@ -98,7 +105,7 @@ def stream_response(streamer):
 
         yield text
 
-    # If this is a assistant reponse (not a tool response), we've yielded all of the text and can return
+    # If this is a assistant reponse and not a tool response, we've already yielded the response text and can return
     if len(tool_response) == 0:
         return
 
@@ -108,20 +115,14 @@ def stream_response(streamer):
 
     st.session_state.messages.append({"role": "assistant", "tool_calls": [{"type": "function", "function": tool_call}]})
 
-    tool_name = tool_call["name"]
-    tool_parameters = tool_call["arguments"]
+    # Call the tool and get the result
+    tool_return = globals()[tool_call["name"]](**tool_call["arguments"])
 
-    tool_index = -1
-    for i, tool in enumerate(agent_tools):
-        if tool.__name__ == tool_name:
-            tool_index = i
-            break
-
-    tool_return = agent_tools[tool_index](**tool_parameters)
-
+    # Add the tool return to the message history. In this case, we're adding the abstracts of the articles.
     content = "\n\n".join([x["abstract"] for x in tool_return])
-    st.session_state.messages.append({"role": "tool", "name": f"{tool_name}", "content": f"{content}"})
+    st.session_state.messages.append({"role": "tool", "name": f"{tool_call['name']}", "content": f"{content}"})
 
+    # We'll now generate a new response using the model, which will be the assistant's response to the tool output
     generate_kwargs = {
         "model": st.session_state.model,
         "tokenizer": st.session_state.tokenizer,
@@ -131,10 +132,11 @@ def stream_response(streamer):
     }
 
     # Run the inferencing in a thread so that the output can be streamed
+    # We cannot call generate() directly, since we're already yielding text to the streamer
     thread = Thread(target=generate, kwargs=generate_kwargs)
     thread.start()
 
-    # Stream the assistant response
+    # Stream the assistant response from the model
     for text in st.session_state.streamer:
         yield text
 
@@ -147,7 +149,7 @@ def stream_response(streamer):
 
 def process_messages(tools=None) -> None:
     """
-    Process the messages in the chat history and generate a response using the model.
+    Process the messages in the chat history and render the response from the model.
     """
 
     generate_kwargs = {
@@ -164,7 +166,7 @@ def process_messages(tools=None) -> None:
 
     # Stream the assistant response in chat message feed
     with st.chat_message("assistant"):
-        response = st.write_stream(stream_response(st.session_state.streamer))
+        response = st.write_stream(process_response(st.session_state.streamer))
 
     # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
@@ -178,8 +180,7 @@ with st.sidebar:
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
 
 # Initialize the session state if we don't already have a model loaded.
-# This is intentionally positioned after the sidebar so that the sidebar is not blocked by model loading
-# and the model parameters can be initiailized.
+# This is intentionally positioned after the sidebar so that the model parameters in the sidebar are initiailized.
 if "model" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": system_message}]
 

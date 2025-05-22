@@ -106,7 +106,7 @@ def run_training():
         logger.info(f"mutation prompt:\n{mutation_prompt}")
 
         # generate a new prompt using the mutation prompt
-        result = model_client.generate_text(mutation_prompt, MUTATION_GENERATE_KWARGS)
+        result = model_client.generate(mutation_prompt, MUTATION_GENERATE_KWARGS)
         logger.info(f"raw prompt mutation results:\n{result}")
 
         # extract the prompt from the response

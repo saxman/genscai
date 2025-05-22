@@ -157,11 +157,5 @@ cython_debug/
 # PyCharm
 .idea/
 
-# transient data files
-db*.json
-test.json
-train.json
-validate.json
-
 # transitent output files
 output/

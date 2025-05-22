@@ -27,6 +27,7 @@ class ModelClient:
     MODEL_DEEPSEEK_R1_8B = None
     MODEL_MISTRAL_7B = None
     MODEL_MISTRAL_NEMO_12B = None
+    MODEL_MISTRAL_SMALL_3_1_24B = None
     MODEL_QWEN_2_5_7B = None
     MODEL_GPT_4O_MINI = None
     MODEL_GPT_4O = None
@@ -55,7 +56,7 @@ class AisuiteClient(ModelClient):
         super().__init__(model_id, model_kwargs)
         self.client = aisuite.Client()
 
-    def generate_text(self, prompt, generate_kwargs):
+    def generate(self, prompt, generate_kwargs):
         messages = [{"role": "user", "content": prompt}]
 
         response = self.client.chat.completions.create(
@@ -69,25 +70,68 @@ class OllamaClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "llama3.2:3b"
     MODEL_GEMMA_2_9B = "gemma2:9b"
+    MODEL_GEMMA_3_12B = "gemma3:12b"
     MODEL_PHI_4_14B = "phi4:14b"
     MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
     MODEL_MISTRAL_7B = "mistral:7b"
     MODEL_MISTRAL_NEMO_12B = "mistral-nemo"
+    MODEL_MISTRAL_SMALL_3_1_24B = "mistral-small3.1:24b"
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
 
-    def __init__(self, model_id, model_kwargs):
-        super().__init__(model_id, model_kwargs)
+    def __init__(self, model_id):
+        super().__init__(model_id, None)
 
         ollama.pull(model_id)
 
-    def generate_text(self, prompt, generate_kwargs) -> str:
-        response: ollama.ChatResponse = ollama.chat(
+    def generate(self, prompt: str, generate_kwargs: dict) -> str:
+        response: ollama.GenerateResponse = ollama.generate(
             model=self.model_id,
-            messages=[{"role": "user", "content": prompt}],
+            prompt=prompt,
             options={"temperature": generate_kwargs["temperature"]},
         )
 
-        return response.message.content
+        return response['response']
+    
+    def chat(self, messages: list, generate_kwargs: dict = None, tools: dict = None) -> list:
+        if generate_kwargs is not None:
+            options = {
+                "temperature": generate_kwargs["temperature"],
+            }
+        else:
+            options = {}
+
+        if tools is not None and self.model_id == OllamaClient.MODEL_LLAMA_3_1_8B:
+            logger.warning("Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/ ")
+
+        response: ollama.ChatResponse = ollama.chat(
+            model=self.model_id,
+            messages=messages,
+            options=options,
+            tools=tools
+        )
+
+        message = {
+            "role": response.message.role
+        }
+
+        if response.message.content != "":
+            message["content"] = response.message.content
+        elif response.message.tool_calls:
+            message["tool_calls"] = []
+            for tool_call in response.message.tool_calls:
+                message["tool_calls"].append(
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }
+                )
+        
+        messages.append(message)
+
+        return messages
 
 
 class HuggingFaceClient(ModelClient):
@@ -115,7 +159,7 @@ class HuggingFaceClient(ModelClient):
             print("emptying mps cache")
             torch.mps.empty_cache()
 
-    def generate_text(self, prompt, generate_kwargs) -> str:
+    def generate(self, prompt, generate_kwargs) -> str:
         generate_kwargs["bos_token_id"] = self.tokenizer.bos_token_id
         generate_kwargs["pad_token_id"] = self.tokenizer.eos_token_id
         generate_kwargs["eos_token_id"] = self.tokenizer.eos_token_id

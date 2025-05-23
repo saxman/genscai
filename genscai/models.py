@@ -74,7 +74,7 @@ class OllamaClient(ModelClient):
     MODEL_PHI_4_14B = "phi4:14b"
     MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
     MODEL_MISTRAL_7B = "mistral:7b"
-    MODEL_MISTRAL_NEMO_12B = "mistral-nemo"
+    MODEL_MISTRAL_NEMO_12B = "mistral-nemo:12b"
     MODEL_MISTRAL_SMALL_3_1_24B = "mistral-small3.1:24b"
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
 

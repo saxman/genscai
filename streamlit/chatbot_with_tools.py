@@ -14,7 +14,7 @@ import chromadb
 # Avoid torch RuntimeError
 torch.classes.__path__ = []
 
-model_id = "meta-llama/Llama-3.1-8B-Instruct"
+model_id = "mistralai/Mistral-Nemo-Instruct-2407"
 knowledge_base = "medrxiv_chunked_256_cosine"
 
 system_message = """

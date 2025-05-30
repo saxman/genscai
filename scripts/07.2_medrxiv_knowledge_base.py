@@ -8,10 +8,7 @@ from tqdm import tqdm
 def store_articles(articles):
     client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
 
-    try:
-        collection = client.create_collection(name="medxriv")
-    except Exception:
-        collection = client.get_collection(name="medxriv")
+    collection = client.get_or_create_collection(name="medxriv")
 
     documents = [x["abstract"] for x in articles]
     ids = [x["doi"] for x in articles]
@@ -23,10 +20,7 @@ def store_articles(articles):
 def store_article_chunks(articles):
     client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
 
-    try:
-        collection = client.create_collection(name="medxriv_chunked_256_cosine", metadata={"hnsw:space": "cosine"})
-    except Exception:
-        collection = client.get_collection(name="medxriv_chunked_256_cosine")
+    collection = client.get_or_create_collection(name="medrxiv_chunked_256_cosine", metadata={"hnsw:space": "cosine"})
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=50)
 
@@ -40,7 +34,7 @@ def store_article_chunks(articles):
 
 if __name__ == "__main__":
     for year in range(2019, 2025):
-        with open(paths.output / f"medxriv_{year}.json", "r") as fin:
+        with open(paths.output / f"medrxiv_{year}.json", "r") as fin:
             articles = json.load(fin)
 
         print(f"Storing {len(articles)} articles for year {year} in Chroma database")

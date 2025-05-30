@@ -1,4 +1,4 @@
-from genscai import medxriv, paths
+from genscai import medrxiv, paths
 import json
 
 
@@ -8,8 +8,8 @@ if __name__ == "__main__":
     end_date = f"{year}-12-31"
 
     print(f"Retrieving articles from {start_date} to {end_date}")
-    articles = medxriv.retrieve_articles(start_date=start_date, end_date=end_date)
+    articles = medrxiv.retrieve_articles(start_date=start_date, end_date=end_date)
 
     print(f"Writing {len(articles)} articles to file")
-    with open(paths.output / f"medxriv_{year}.json", "w") as fout:
+    with open(paths.output / f"medrxiv_{year}.json", "w") as fout:
         json.dump(articles, fout)

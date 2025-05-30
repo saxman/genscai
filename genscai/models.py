@@ -90,29 +90,28 @@ class OllamaClient(ModelClient):
             options={"temperature": generate_kwargs["temperature"]},
         )
 
-        return response['response']
-    
+        return response["response"]
+
     def chat(self, messages: list, generate_kwargs: dict = None, tools: dict = None) -> list:
         if generate_kwargs is not None:
+            # ref: https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
             options = {
-                "temperature": generate_kwargs["temperature"],
+                "temperature": generate_kwargs.get("temperature", 0.15),
+                "top_p": generate_kwargs.get("top_p", 0.9),
             }
         else:
             options = {}
 
         if tools is not None and self.model_id == OllamaClient.MODEL_LLAMA_3_1_8B:
-            logger.warning("Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/ ")
+            logger.warning(
+                "Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/ "
+            )
 
         response: ollama.ChatResponse = ollama.chat(
-            model=self.model_id,
-            messages=messages,
-            options=options,
-            tools=tools
+            model=self.model_id, messages=messages, options=options, tools=tools
         )
 
-        message = {
-            "role": response.message.role
-        }
+        message = {"role": response.message.role}
 
         if response.message.content != "":
             message["content"] = response.message.content
@@ -122,13 +121,10 @@ class OllamaClient(ModelClient):
                 message["tool_calls"].append(
                     {
                         "type": "function",
-                        "function": {
-                            "name": tool_call.function.name,
-                            "arguments": tool_call.function.arguments
-                        }
+                        "function": {"name": tool_call.function.name, "arguments": tool_call.function.arguments},
                     }
                 )
-        
+
         messages.append(message)
 
         return messages

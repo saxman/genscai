@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 DB_PATH = str(paths.output / "medrxiv.db")
 
+
 def store_articles(articles):
     client = chromadb.PersistentClient(path=DB_PATH)
 

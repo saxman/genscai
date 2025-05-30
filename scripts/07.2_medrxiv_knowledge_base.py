@@ -4,11 +4,12 @@ import chromadb
 import json
 from tqdm import tqdm
 
+DB_PATH = str(paths.output / "medrxiv.db")
 
 def store_articles(articles):
-    client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
+    client = chromadb.PersistentClient(path=DB_PATH)
 
-    collection = client.get_or_create_collection(name="medxriv")
+    collection = client.get_or_create_collection(name="articles")
 
     documents = [x["abstract"] for x in articles]
     ids = [x["doi"] for x in articles]
@@ -18,16 +19,16 @@ def store_articles(articles):
 
 
 def store_article_chunks(articles):
-    client = chromadb.PersistentClient(path=str(paths.output / "genscai.db"))
+    client = chromadb.PersistentClient(path=DB_PATH)
 
-    collection = client.get_or_create_collection(name="medrxiv_chunked_256_cosine", metadata={"hnsw:space": "cosine"})
+    collection = client.get_or_create_collection(name="articles_cosign_chunked_256", metadata={"hnsw:space": "cosine"})
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=50)
 
     for article in tqdm(articles):
         chunks = text_splitter.split_text(article["abstract"])
         ids = [f"{article['doi']}:{i}" for i in range(len(chunks))]
-        metadatas = [{k: v for k, v in article.items() if k != "doi" and k != "abstract"} for _ in chunks]
+        metadatas = [{k: v for k, v in article.items() if k != "doi"} for _ in chunks]
 
         collection.add(documents=chunks, ids=ids, metadatas=metadatas)
 

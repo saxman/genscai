@@ -27,6 +27,7 @@ dependencies = [
     "numpy",
     "seaborn",
     "chromadb",
+    "sentence-transformers",
     "langchain-text-splitters",
     "streamlit",
     "scipy", # force version bump to latest to support numpy 2

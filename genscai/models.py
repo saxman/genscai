@@ -87,20 +87,21 @@ class OllamaClient(ModelClient):
         ollama.pull(model_id)
 
     def generate(self, prompt: str, generate_kwargs: dict) -> str:
-        response: ollama.GenerateResponse = ollama.generate(
-            model=self.model_id,
-            prompt=prompt,
-            options={"temperature": generate_kwargs["temperature"]},
-        )
+        response: ollama.GenerateResponse = ollama.generate(model=self.model_id, prompt=prompt, options=generate_kwargs)
 
         return response["response"]
+
+    def genterate_streamed(self, prompt: str, generate_kwargs: dict) -> Iterator[str]:
+        response = ollama.generate(model=self.model_id, prompt=prompt, options=generate_kwargs, stream=True)
+
+        return response
 
     def _chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> None:
         self.messages.append(message)
 
         if tools is not None and self.model_id == OllamaClient.MODEL_LLAMA_3_1_8B:
             logger.warning(
-                "Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
+                "Llama 3.1 8B cannot . Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
             )
 
     def _handle_tool_calls(self, response, tools: dict) -> None:

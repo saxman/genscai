@@ -69,45 +69,36 @@ with st.sidebar:
 
 # Initialize the session state if we don't already have a model loaded
 if "model_client" not in st.session_state:
-    messages = [{"role": "system", "content": SYSTEM_MESSAGE}]
-    model_client = ModelClient(model_id=MODEL_ID)
+    model_client = st.session_state.model_client = ModelClient(model_id=MODEL_ID)
 
-    st.session_state.messages = model_client.chat(
-        messages, generate_kwargs={"temperature": temperature, "top_p": top_p}
+    message = {"role": "system", "content": SYSTEM_MESSAGE}
+
+    streamed_response = model_client.chat_streamed(
+        message,
+        generate_kwargs={"temperature": temperature, "top_p": top_p},
     )
-    st.session_state.model_client = model_client
 
-# Only render assistant and user messages (not tool messages)
-messages = [x for x in st.session_state.messages if x["role"] in ["assistant", "user"] and "content" in x]
-for message in messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    with st.chat_message("assistant"):
+        response = st.write_stream(streamed_response)
+else:
+    # Only render assistant and user messages (not tool messages)
+    messages = [
+        x for x in st.session_state.model_client.messages if x["role"] in ["assistant", "user"] and "content" in x
+    ]
+    for message in messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 # React to user input
 if prompt := st.chat_input("What's up?"):
     # Display user message in chat message container
     st.chat_message("user").markdown(prompt)
 
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    message = {"role": "user", "content": prompt}
 
-    model_client = st.session_state.model_client
-    messages = model_client.chat(
-        st.session_state.messages, tools=MODEL_TOOLS, generate_kwargs={"temperature": temperature, "top_p": top_p}
+    streamed_response = st.session_state.model_client.chat_streamed(
+        message, generate_kwargs={"temperature": temperature, "top_p": top_p}, tools=MODEL_TOOLS
     )
 
-    if "tool_calls" in messages[-1]:
-        for tool_call in messages[-1]["tool_calls"]:
-            tool_name = tool_call["function"]["name"]
-            tool_args = tool_call["function"]["arguments"]
-
-            content, data = globals()[tool_name](**tool_args)
-
-            # Add the tool response to the message history and send it back to the model to generate a final response
-            messages.append({"role": "tool", "content": content})
-
-        messages = model_client.chat(messages, generate_kwargs={"temperature": temperature, "top_p": top_p})
-
-    st.session_state.messages = messages
-
-    st.chat_message("assistant").markdown(st.session_state.messages[-1]["content"])
+    with st.chat_message("assistant"):
+        st.write_stream(streamed_response)

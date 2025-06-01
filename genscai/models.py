@@ -6,6 +6,7 @@ from transformers.utils import logging as log
 import ollama
 import aisuite
 import logging
+from typing import Iterator
 
 log.set_verbosity_error()
 
@@ -38,6 +39,8 @@ class ModelClient:
 
         self.model_id = model_id
         self.model_kwargs = model_kwargs
+
+        self.messages = []
 
 
 class AisuiteClient(ModelClient):
@@ -92,42 +95,79 @@ class OllamaClient(ModelClient):
 
         return response["response"]
 
-    def chat(self, messages: list, generate_kwargs: dict = None, tools: dict = None) -> list:
-        if generate_kwargs is not None:
-            # ref: https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
-            options = {
-                "temperature": generate_kwargs.get("temperature", 0.15),
-                "top_p": generate_kwargs.get("top_p", 0.9),
-            }
-        else:
-            options = {}
+    def _chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> None:
+        self.messages.append(message)
 
         if tools is not None and self.model_id == OllamaClient.MODEL_LLAMA_3_1_8B:
             logger.warning(
-                "Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/ "
+                "Tool calling is not fully supported by Llama 3.1 8B. Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
             )
 
-        response: ollama.ChatResponse = ollama.chat(
-            model=self.model_id, messages=messages, options=options, tools=tools
+    def _handle_tool_calls(self, response, tools: dict) -> None:
+        message = {"role": response.message.role}
+        self.messages.append(message)
+
+        message["tool_calls"] = []
+        for tool_call in response["message"].tool_calls:
+            message["tool_calls"].append(
+                {
+                    "type": "function",
+                    "function": {"name": tool_call.function.name, "arguments": tool_call.function.arguments},
+                }
+            )
+
+            for tool in tools:
+                if tool.__name__ == tool_call.function.name:
+                    tool_response = tool(**tool_call.function.arguments)
+
+                    tool_message = {"role": "tool", "name": tool_call.function.name, "content": str(tool_response)}
+
+                    self.messages.append(tool_message)
+
+                    break
+
+        return
+
+    def chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> str:
+        self._chat(message, generate_kwargs, tools)
+
+        response = ollama.chat(model=self.model_id, messages=self.messages, options=generate_kwargs, tools=tools)
+
+        if response["message"].tool_calls:
+            self._handle_tool_calls(response, tools)
+
+            response = ollama.chat(model=self.model_id, messages=self.messages, options=generate_kwargs, tools=tools)
+
+        self.messages.append({"role": response["message"].role, "content": response["message"].content})
+
+        return response["message"].content
+
+    def chat_streamed(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> Iterator[str]:
+        self._chat(message, generate_kwargs, tools)
+
+        response = ollama.chat(
+            model=self.model_id, messages=self.messages, options=generate_kwargs, tools=tools, stream=True
         )
 
-        message = {"role": response.message.role}
+        response_part = next(response)
 
-        if response.message.content != "":
-            message["content"] = response.message.content
-        elif response.message.tool_calls:
-            message["tool_calls"] = []
-            for tool_call in response.message.tool_calls:
-                message["tool_calls"].append(
-                    {
-                        "type": "function",
-                        "function": {"name": tool_call.function.name, "arguments": tool_call.function.arguments},
-                    }
-                )
+        if response_part["message"].tool_calls:
+            self._handle_tool_calls(response_part, tools)
 
-        messages.append(message)
+            response = ollama.chat(
+                model=self.model_id, messages=self.messages, options=generate_kwargs, tools=tools, stream=True
+            )
 
-        return messages
+            response_part = next(response)
+
+        content = response_part["message"].content
+        yield content
+
+        for chunk in response:
+            content += chunk["message"].content
+            yield chunk["message"].content
+
+        self.messages.append({"role": response_part["message"].role, "content": content})
 
 
 class HuggingFaceClient(ModelClient):

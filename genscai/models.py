@@ -101,7 +101,7 @@ class OllamaClient(ModelClient):
 
         if tools is not None and self.model_id == OllamaClient.MODEL_LLAMA_3_1_8B:
             logger.warning(
-                "Llama 3.1 8B cannot . Ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
+                "Tool usage with Llama 3.1 8B is not fully supported, ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
             )
 
     def _handle_tool_calls(self, response, tools: dict) -> None:

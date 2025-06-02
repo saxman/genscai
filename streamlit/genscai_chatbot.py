@@ -57,7 +57,7 @@ def search_research_articles(search_request: str) -> tuple[str, list[dict]]:
 
         id_set.add(id)
         articles.append({"id": id, "abstract": abstracts[i], "metadata": metadata[i]})
-        content += f"Title: {metadata[i]['title']}\nAbstract: {abstracts[i]}\nAuthors: {metadata[i]['authors']}\nDate: {metadata[i]['date']}\nURL: https://www.medrxiv.org/content/{id}\n\n"
+        content += f"Title: {metadata[i]['title']}\nAbstract: {abstracts[i]}\nAuthors: {metadata[i]['authors']}\nDate: {metadata[i]['date']}\nLink: https://www.medrxiv.org/content/{id}\n\n"
 
     return content, articles
 
@@ -71,6 +71,9 @@ with st.sidebar:
     model_id = st.selectbox("Model", options=MODELS)                    
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.15, step=0.01)
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+
+    if st.button("Reset chat"):
+        st.session_state.clear()
 
     if "model_id" not in st.session_state:
         st.session_state.model_id = model_id

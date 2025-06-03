@@ -9,11 +9,7 @@ import chromadb
 # Avoid torch RuntimeError when using Hugging Face Transformers
 torch.classes.__path__ = []
 
-MODELS = [
-    ModelClient.MODEL_MISTRAL_SMALL_3_1_24B,
-    ModelClient.MODEL_LLAMA_3_2_3B,
-    ModelClient.MODEL_LLAMA_3_1_8B
-]
+MODELS = [ModelClient.MODEL_MISTRAL_SMALL_3_1_24B, ModelClient.MODEL_LLAMA_3_2_3B, ModelClient.MODEL_LLAMA_3_1_8B]
 
 KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
 KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
@@ -68,13 +64,14 @@ with st.sidebar:
     st.title("IDM Research Assistant")
     st.write("Discuss infectious disease modeling with access to current disease modeling research.")
 
-    model_id = st.selectbox("Model", options=MODELS)                    
+    model_id = st.selectbox("Model", options=MODELS)
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.15, step=0.01)
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
 
     if st.button("Reset chat"):
         st.session_state.clear()
 
+    # Set the model id in the sesstion state, or update the model client if the model id has changed
     if "model_id" not in st.session_state:
         st.session_state.model_id = model_id
     elif st.session_state.model_id != model_id:

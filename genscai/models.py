@@ -3,6 +3,7 @@ import torch
 from transformers import AutoTokenizer
 from transformers import AutoModelForCausalLM
 from transformers.utils import logging as log
+from transformers import TextIteratorStreamer
 import ollama
 import aisuite
 import logging
@@ -13,8 +14,8 @@ log.set_verbosity_error()
 logger = logging.getLogger(__name__)
 
 MODEL_KWARGS = {
-    "low_cpu_mem_usage": True,
-    "device_map": "balanced",
+    # "low_cpu_mem_usage": True,
+    "device_map": "auto",
     "torch_dtype": "auto",
 }
 
@@ -43,6 +44,7 @@ class ModelClient:
         self.messages = []
 
 
+
 class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "ollama:llama3.2:3b"
@@ -55,8 +57,8 @@ class AisuiteClient(ModelClient):
     MODEL_GPT_4O_MINI = "openai:gpt-4o-mini"
     MODEL_GPT_4O = "openai:gpt-4o"
 
-    def __init__(self, model_id, model_kwargs):
-        super().__init__(model_id, model_kwargs)
+    def __init__(self, model_id):
+        super().__init__(model_id, None)
         self.client = aisuite.Client()
 
     def generate(self, prompt, generate_kwargs):
@@ -70,6 +72,7 @@ class AisuiteClient(ModelClient):
 
 
 class OllamaClient(ModelClient):
+    MODEL_LLAMA_3_3_70B = "llama3.3:70b"
     MODEL_LLAMA_3_1_8B = "llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "llama3.2:3b"
     MODEL_GEMMA_2_9B = "gemma2:9b"
@@ -126,6 +129,8 @@ class OllamaClient(ModelClient):
                     self.messages.append(tool_message)
 
                     break
+        
+        logger.debug("Tools calls: f{message['tool_calls']}")
 
         return
 
@@ -182,8 +187,11 @@ class HuggingFaceClient(ModelClient):
     MODEL_MISTRAL_NEMO_12B = "mistralai/Mistral-Nemo-Instruct-2407"
     MODEL_QWEN_2_5_7B = "Qwen/Qwen2.5-7B-Instruct-1M"
 
-    def __init__(self, model_id, model_kwargs):
+    def __init__(self, model_id, model_kwargs = None):
         super().__init__(model_id, model_kwargs)
+
+        if model_kwargs is None:
+            model_kwargs = MODEL_KWARGS
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, attn_implementation="eager")
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
@@ -213,6 +221,63 @@ class HuggingFaceClient(ModelClient):
         response_text = self.tokenizer.decode(response, skip_special_tokens=True)
 
         return response_text
+
+    def _chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> None:
+        self.messages.append(message)
+
+        if tools is not None and self.model_id == HuggingFaceClient.MODEL_LLAMA_3_1_8B:
+            logger.warning(
+                "Tool usage with Llama 3.1 8B is not fully supported, ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
+            )
+
+    def chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> str:
+        self._chat(message, generate_kwargs, tools)
+
+        input_tokens = self.tokenizer.apply_chat_template(
+            self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+        ).to(self.model.device)
+
+        output_tokens = self.model.generate(
+            **input_tokens,
+            **generate_kwargs
+            # max_new_tokens=1024,
+            # do_sample=True,
+            # temperature=0.6,
+            # top_p=0.9,
+        )
+
+        response_tokens = output_tokens[0][input_tokens["input_ids"].shape[-1] :]
+        response = self.tokenizer.decode(response_tokens, skip_special_tokens=True)
+
+        self.messages.append({"role": "assistant", "content": response})
+
+        return response
+
+    def chat_streamed(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> Iterator[str]:
+        self._chat(message, generate_kwargs, tools)
+
+        if not hasattr(self, "streamer"):
+            self.streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
+
+        input_tokens = self.tokenizer.apply_chat_template(
+            self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+        ).to(self.model.device)
+
+        self.model.generate(
+            **input_tokens,
+            streamer=self.streamer,
+            **generate_kwargs
+        )
+
+        content = ""
+        for chunk in self.streamer:
+            content += chunk
+            yield chunk
+
+        self.messages.append({"role": "assistant", "content": content})
+
+        return content
+
 
     def print_model_info(self):
         print(f"model : size : {self.model.get_memory_footprint() // 1024**2} MB")

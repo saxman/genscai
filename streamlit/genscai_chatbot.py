@@ -2,6 +2,7 @@ import streamlit as st
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
+# from genscai.models import HuggingFaceClient as ModelClient
 
 import torch
 import chromadb
@@ -9,7 +10,8 @@ import chromadb
 # Avoid torch RuntimeError when using Hugging Face Transformers
 torch.classes.__path__ = []
 
-MODELS = [ModelClient.MODEL_MISTRAL_SMALL_3_1_24B, ModelClient.MODEL_LLAMA_3_2_3B, ModelClient.MODEL_LLAMA_3_1_8B]
+MODELS = [ModelClient.MODEL_MISTRAL_SMALL_3_1_24B, ModelClient.MODEL_LLAMA_3_3_70B, ModelClient.MODEL_LLAMA_3_2_3B, ModelClient.MODEL_LLAMA_3_1_8B]
+# MODELS = [ModelClient.MODEL_LLAMA_3_1_8B]
 
 KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
 KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
@@ -87,7 +89,7 @@ if "model_client" not in st.session_state:
 
     streamed_response = model_client.chat_streamed(
         message,
-        generate_kwargs={"temperature": temperature, "top_p": top_p},
+        generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512},
     )
 
     with st.chat_message("assistant"):
@@ -109,7 +111,7 @@ if prompt := st.chat_input("What's up?"):
     message = {"role": "user", "content": prompt}
 
     streamed_response = st.session_state.model_client.chat_streamed(
-        message, generate_kwargs={"temperature": temperature, "top_p": top_p}, tools=MODEL_TOOLS
+        message, generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512}, tools=MODEL_TOOLS
     )
 
     with st.chat_message("assistant"):

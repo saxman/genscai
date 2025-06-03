@@ -3,7 +3,7 @@ name = "genscai"
 version = "0.1.0"
 description = "Generative AI Tools and Recipes for Science and Research"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 
 # pip dependencies
@@ -30,6 +30,7 @@ dependencies = [
     "sentence-transformers",
     "langchain-text-splitters",
     "streamlit",
+    "pynvml",
     "scipy", # force version bump to latest to support numpy 2
     "pyarrow" # force version bump to latest to support numpy 2
 ]

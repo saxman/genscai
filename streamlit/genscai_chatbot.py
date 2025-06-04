@@ -2,16 +2,15 @@ import streamlit as st
 
 from genscai import paths
 from genscai.models import OllamaClient as ModelClient
-# from genscai.models import HuggingFaceClient as ModelClient
 
 import torch
 import chromadb
+import json
 
 # Avoid torch RuntimeError when using Hugging Face Transformers
 torch.classes.__path__ = []
 
-MODELS = [ModelClient.MODEL_MISTRAL_SMALL_3_1_24B, ModelClient.MODEL_LLAMA_3_3_70B, ModelClient.MODEL_LLAMA_3_2_3B, ModelClient.MODEL_LLAMA_3_1_8B]
-# MODELS = [ModelClient.MODEL_LLAMA_3_1_8B]
+MODELS = [ModelClient.MODEL_MISTRAL_SMALL_3_1_24B, ModelClient.MODEL_QWEN_3_8B, ModelClient.MODEL_LLAMA_3_3_70B, ModelClient.MODEL_LLAMA_3_2_3B]
 
 KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
 KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
@@ -22,7 +21,6 @@ Reply in short, concise sentrences, unless the user asks for a more detailed ans
 Always provide links to the articles you reference.
 Please introduce yourself.
 """
-
 
 def search_research_articles(search_request: str) -> tuple[str, list[dict]]:
     """
@@ -59,7 +57,6 @@ def search_research_articles(search_request: str) -> tuple[str, list[dict]]:
 
     return content, articles
 
-
 MODEL_TOOLS = [search_research_articles]
 
 with st.sidebar:
@@ -69,6 +66,7 @@ with st.sidebar:
     model_id = st.selectbox("Model", options=MODELS)
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.15, step=0.01)
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+    repeat_penalty = st.sidebar.slider("repeat_penalty", min_value=0.9, max_value=1.5, value=1.1, step=0.1)
 
     if st.button("Reset chat"):
         st.session_state.clear()
@@ -89,7 +87,7 @@ if "model_client" not in st.session_state:
 
     streamed_response = model_client.chat_streamed(
         message,
-        generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512},
+        generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512, "repeat_penalty": repeat_penalty}
     )
 
     with st.chat_message("assistant"):
@@ -103,7 +101,6 @@ else:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# React to user input
 if prompt := st.chat_input("What's up?"):
     # Display user message in chat message container
     st.chat_message("user").markdown(prompt)
@@ -111,8 +108,12 @@ if prompt := st.chat_input("What's up?"):
     message = {"role": "user", "content": prompt}
 
     streamed_response = st.session_state.model_client.chat_streamed(
-        message, generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512}, tools=MODEL_TOOLS
+        message, generate_kwargs={"temperature": temperature, "top_p": top_p, "max_new_tokens": 512, "repeat_penalty": repeat_penalty}, tools=MODEL_TOOLS
     )
 
     with st.chat_message("assistant"):
         st.write_stream(streamed_response)
+
+# TODO: Determine better layout
+with st.popover("Messages"):
+    st.code(json.dumps(st.session_state.model_client.messages, indent=4), language="json", line_numbers=True)

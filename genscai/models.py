@@ -13,24 +13,25 @@ log.set_verbosity_error()
 
 logger = logging.getLogger(__name__)
 
-MODEL_KWARGS = {
-    # "low_cpu_mem_usage": True,
-    "device_map": "auto",
-    "torch_dtype": "auto",
-}
-
-
 class ModelClient:
     MODEL_LLAMA_3_1_8B = None
     MODEL_LLAMA_3_2_3B = None
+    MODEL_LLAMA_3_3_70B = None
+
     MODEL_GEMMA_2_9B = None
     MODEL_GEMMA_3_12B = None
+
     MODEL_PHI_4_14B = None
+
     MODEL_DEEPSEEK_R1_8B = None
+
     MODEL_MISTRAL_7B = None
     MODEL_MISTRAL_NEMO_12B = None
     MODEL_MISTRAL_SMALL_3_1_24B = None
+
     MODEL_QWEN_2_5_7B = None
+    MODEL_QWEN_3_8B = None
+
     MODEL_GPT_4O_MINI = None
     MODEL_GPT_4O = None
 
@@ -44,16 +45,21 @@ class ModelClient:
         self.messages = []
 
 
-
 class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "ollama:llama3.2:3b"
+
     MODEL_GEMMA_2_9B = "ollama:gemma2:9b"
+
     MODEL_PHI_4_14B = "ollama:phi4:14b"
+
     MODEL_DEEPSEEK_R1_8B = "ollama:deepseek-r1:8b"
+
     MODEL_MISTRAL_7B = "ollama:mistral:7b"
     MODEL_MISTRAL_NEMO_12B = "ollama:mistral-nemo"
+
     MODEL_QWEN_2_5_7B = "ollama:qwen2.5:7b"
+
     MODEL_GPT_4O_MINI = "openai:gpt-4o-mini"
     MODEL_GPT_4O = "openai:gpt-4o"
 
@@ -75,20 +81,27 @@ class OllamaClient(ModelClient):
     MODEL_LLAMA_3_3_70B = "llama3.3:70b"
     MODEL_LLAMA_3_1_8B = "llama3.1:8b"
     MODEL_LLAMA_3_2_3B = "llama3.2:3b"
+
     MODEL_GEMMA_2_9B = "gemma2:9b"
     MODEL_GEMMA_3_12B = "gemma3:12b"
+
     MODEL_PHI_4_14B = "phi4:14b"
+
     MODEL_DEEPSEEK_R1_8B = "deepseek-r1:8b"
+
     MODEL_MISTRAL_7B = "mistral:7b"
     MODEL_MISTRAL_NEMO_12B = "mistral-nemo:12b"
     MODEL_MISTRAL_SMALL_3_1_24B = "mistral-small3.1:24b"
+
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
+    MODEL_QWEN_3_8B = "qwen3:8b"
 
     def __init__(self, model_id):
         super().__init__(model_id, None)
 
         ollama.pull(model_id)
 
+    # for generate_kwargs, see https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
     def generate(self, prompt: str, generate_kwargs: dict) -> str:
         response: ollama.GenerateResponse = ollama.generate(model=self.model_id, prompt=prompt, options=generate_kwargs)
 
@@ -179,19 +192,29 @@ class OllamaClient(ModelClient):
 class HuggingFaceClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "meta-llama/Meta-Llama-3.1-8B-Instruct"
     MODEL_LLAMA_3_2_3B = "meta-llama/Llama-3.2-3B-Instruct"
+
     MODEL_DEEPSEEK_R1_8B = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+
     MODEL_GEMMA_2_9B = "google/gemma-2-9b-it"
     MODEL_GEMMA_3_12B = "google/gemma-3-12b-it"
+
     MODEL_PHI_4_14B = "microsoft/phi-4"
+
     MODEL_MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
     MODEL_MISTRAL_NEMO_12B = "mistralai/Mistral-Nemo-Instruct-2407"
+
     MODEL_QWEN_2_5_7B = "Qwen/Qwen2.5-7B-Instruct-1M"
+
+    DEFAULT_MODEL_KWARGS = {
+        "device_map": "auto",
+        "torch_dtype": "auto",
+    }
 
     def __init__(self, model_id, model_kwargs = None):
         super().__init__(model_id, model_kwargs)
 
         if model_kwargs is None:
-            model_kwargs = MODEL_KWARGS
+            model_kwargs = self.DEFAULT_MODEL_KWARGS
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, attn_implementation="eager")
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
@@ -240,10 +263,6 @@ class HuggingFaceClient(ModelClient):
         output_tokens = self.model.generate(
             **input_tokens,
             **generate_kwargs
-            # max_new_tokens=1024,
-            # do_sample=True,
-            # temperature=0.6,
-            # top_p=0.9,
         )
 
         response_tokens = output_tokens[0][input_tokens["input_ids"].shape[-1] :]
@@ -277,7 +296,6 @@ class HuggingFaceClient(ModelClient):
         self.messages.append({"role": "assistant", "content": content})
 
         return content
-
 
     def print_model_info(self):
         print(f"model : size : {self.model.get_memory_footprint() // 1024**2} MB")

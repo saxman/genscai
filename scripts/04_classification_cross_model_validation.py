@@ -1,7 +1,7 @@
 import logging
 
 from genscai import paths
-from genscai.models import MODEL_KWARGS, HuggingFaceClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 from genscai.prompts import PromptCatalog
 from genscai.data import load_classification_training_data
 import genscai.classification as gc
@@ -28,7 +28,7 @@ def run_tests():
 
     for test_model_id in test_model_ids:
         print(f"loading model: {test_model_id}", flush=True)
-        model_client = ModelClient(test_model_id, MODEL_KWARGS)
+        model_client = ModelClient(test_model_id)
 
         for prompt_model_id in prompt_model_ids:
             prompt = catalog.retrieve_last(prompt_model_id)

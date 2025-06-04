@@ -1,6 +1,6 @@
 import pandas as pd
 
-from genscai.models import HuggingFaceClient, MODEL_KWARGS
+from genscai.models import HuggingFaceClient
 from genscai.classification import CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS
 from genscai import paths
 from genscai.classification import classify_papers
@@ -26,7 +26,7 @@ def run_classification():
     for i, model_id in enumerate(MODEL_IDS):
         df = pd.concat([df_train, df_test, df_validate])
 
-        model_client = HuggingFaceClient(model_id, MODEL_KWARGS)
+        model_client = HuggingFaceClient(model_id)
         prompt = catalog.retrieve_last(model_id)
 
         df = classify_papers(

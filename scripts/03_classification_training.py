@@ -1,7 +1,7 @@
 import logging
 
 from genscai import paths
-from genscai.models import MODEL_KWARGS, HuggingFaceClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 from genscai.classification import (
     CLASSIFICATION_TASK_PROMPT_TEMPLATE,
     CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
@@ -36,7 +36,7 @@ def run_training():
     df_data["predict_modeling"] = None
 
     print(f"loading model: {MODEL_ID}", flush=True)
-    model_client = ModelClient(MODEL_ID, MODEL_KWARGS)
+    model_client = ModelClient(MODEL_ID)
 
     generate_kwargs = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
     # for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens

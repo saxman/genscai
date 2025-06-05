@@ -18,7 +18,7 @@ data = load_dataset("krosenf/midas-abstracts")
 
 ## Requirements
 
-Python 3.9+
+Python 3.10+
 
 For using Hugging Face models locally (e.g. using Transformers), you'll need SentencePiece, which will be installed during project setup (below). SentencePiece requires Python 3.11 or earlier, however. To use SentencePiece, you can install Python 3.11 and set up your virtual environment using 'python3.11 -m venv .venv' (or 'uv venv --python 3.11' if using uv). Alternatively, if you don't intend to run Hugging Face models locally, ignore the build error when running 'pip install' during setup.
 

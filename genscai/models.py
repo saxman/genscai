@@ -8,10 +8,12 @@ import ollama
 import aisuite
 import logging
 from typing import Iterator
+import json
 
 log.set_verbosity_error()
 
 logger = logging.getLogger(__name__)
+
 
 class ModelClient:
     MODEL_LLAMA_3_1_8B = None
@@ -43,6 +45,13 @@ class ModelClient:
         self.model_kwargs = model_kwargs
 
         self.messages = []
+
+    @property
+    def system_role(self) -> str:
+        if "mistral" in self.model_id:
+            return "user"
+        else:
+            return "system"
 
 
 class AisuiteClient(ModelClient):
@@ -136,14 +145,9 @@ class OllamaClient(ModelClient):
             for tool in tools:
                 if tool.__name__ == tool_call.function.name:
                     tool_response = tool(**tool_call.function.arguments)
-
-                    tool_message = {"role": "tool", "name": tool_call.function.name, "content": str(tool_response)}
-
-                    self.messages.append(tool_message)
+                    self.messages.append({"role": "tool", "name": tool_call.function.name, "content": str(tool_response)})
 
                     break
-        
-        logger.debug("Tools calls: f{message['tool_calls']}")
 
         return
 
@@ -154,7 +158,6 @@ class OllamaClient(ModelClient):
 
         if response["message"].tool_calls:
             self._handle_tool_calls(response, tools)
-
             response = ollama.chat(model=self.model_id, messages=self.messages, options=generate_kwargs, tools=tools)
 
         self.messages.append({"role": response["message"].role, "content": response["message"].content})
@@ -202,15 +205,17 @@ class HuggingFaceClient(ModelClient):
 
     MODEL_MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
     MODEL_MISTRAL_NEMO_12B = "mistralai/Mistral-Nemo-Instruct-2407"
+    MODEL_MISTRAL_SMALL_3_1_24B = "mistralai/Mistral-Small-Instruct-2409"
 
     MODEL_QWEN_2_5_7B = "Qwen/Qwen2.5-7B-Instruct-1M"
+    MODEL_QWEN_3_8B = "Qwen/Qwen3-8B"
 
     DEFAULT_MODEL_KWARGS = {
         "device_map": "auto",
         "torch_dtype": "auto",
     }
 
-    def __init__(self, model_id, model_kwargs = None):
+    def __init__(self, model_id, model_kwargs=None):
         super().__init__(model_id, model_kwargs)
 
         if model_kwargs is None:
@@ -227,7 +232,34 @@ class HuggingFaceClient(ModelClient):
             print("emptying mps cache")
             torch.mps.empty_cache()
 
-    def generate(self, prompt, generate_kwargs) -> str:
+    def _handle_tool_calls(self, response, tools: dict) -> None:
+        message = {"role": "assistant"}
+        self.messages.append(message)
+
+        tools_calls = json.loads(response)
+        if not isinstance(tools_calls, list):
+            tools_calls = [tools_calls]
+
+        message["tool_calls"] = []
+        for tool_call in tools_calls:
+            message["tool_calls"].append(
+                {
+                    "type": "function",
+                    "function": tool_call
+                }
+            )
+
+            for tool in tools:
+                if tool.__name__ == tool_call["name"]:
+                    tool_response = tool(**tool_call["arguments"])
+                    self.messages.append({"role": "tool", "name": tool_call["name"], "content": str(tool_response)})
+
+                    break
+
+        return
+
+    # TODO: don't use chat temaplate for generate, use the tokenizer directly
+    def generate(self, prompt: str, generate_kwargs: dict) -> str:
         generate_kwargs["bos_token_id"] = self.tokenizer.bos_token_id
         generate_kwargs["pad_token_id"] = self.tokenizer.eos_token_id
         generate_kwargs["eos_token_id"] = self.tokenizer.eos_token_id
@@ -253,26 +285,56 @@ class HuggingFaceClient(ModelClient):
                 "Tool usage with Llama 3.1 8B is not fully supported, ref: https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/"
             )
 
-    def chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> str:
+    def chat(self, message: dict, generate_kwargs: dict = {}, tools: dict = None) -> str:
         self._chat(message, generate_kwargs, tools)
 
         input_tokens = self.tokenizer.apply_chat_template(
             self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         ).to(self.model.device)
 
-        output_tokens = self.model.generate(
-            **input_tokens,
-            **generate_kwargs
-        )
+        output_tokens = self.model.generate(**input_tokens, **generate_kwargs)
+        response = self.tokenizer.decode(output_tokens[0][len(input_tokens["input_ids"][0]) :], skip_special_tokens=True)
 
-        response_tokens = output_tokens[0][input_tokens["input_ids"].shape[-1] :]
-        response = self.tokenizer.decode(response_tokens, skip_special_tokens=True)
+        # llama: {"name": "get_current_weather", "arguments": {"location": "Paris"}}
+
+        # qwen: <tool_call>{"name": "get_current_weather", "arguments": {"location": "Paris"}}</tool_call>
+        if self.model_id == self.MODEL_QWEN_3_8B:
+            think_start = response.index("<think>") + len("<think>")
+            think_end = response.index("</think>")
+            think = response[think_start:think_end]
+
+            response = response[think_end + len("</think>") :].strip()
+
+            if "<tool_call>" in response:
+                tool_call_start = response.index("<tool_call>") + len("<tool_call>")
+                tool_call_end = response.index("</tool_call>")
+                tool_call = response[tool_call_start:tool_call_end].strip()
+
+                print(f"tool_call: {tool_call}")
+
+                self._handle_tool_calls(tool_call, tools)
+
+                input_tokens = self.tokenizer.apply_chat_template(
+                    self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+                 ).to(self.model.device)
+
+                output_tokens = self.model.generate(**input_tokens, **generate_kwargs)
+                response = self.tokenizer.decode(output_tokens[0][len(input_tokens["input_ids"][0]) :], skip_special_tokens=True)
+
+        # mistral: [TOOL_CALLS] [{"name": "get_current_temperature", "arguments": {"location": "Paris"}}]
+        elif self.model_id in [self.MODEL_MISTRAL_7B, self.MODEL_MISTRAL_SMALL_3_1_24B]:
+            if "[TOOL_CALLS]" in response:
+                tool_calls_start = response.index("[TOOL_CALLS]") + len("[TOOL_CALLS]")
+                tool_calls = response[tool_calls_start:].strip()
+
+                self._handle_tool_calls(tool_calls, tools)
+                response = self.chat(messages=self.messages, generate_kwargs=generate_kwargs)
 
         self.messages.append({"role": "assistant", "content": response})
 
         return response
 
-    def chat_streamed(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> Iterator[str]:
+    def chat_streamed(self, message: dict, generate_kwargs: dict = {}, tools: dict = None) -> Iterator[str]:
         self._chat(message, generate_kwargs, tools)
 
         if not hasattr(self, "streamer"):
@@ -282,11 +344,7 @@ class HuggingFaceClient(ModelClient):
             self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         ).to(self.model.device)
 
-        self.model.generate(
-            **input_tokens,
-            streamer=self.streamer,
-            **generate_kwargs
-        )
+        self.model.generate(**input_tokens, streamer=self.streamer, **generate_kwargs)
 
         content = ""
         for chunk in self.streamer:

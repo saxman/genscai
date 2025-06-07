@@ -290,7 +290,14 @@ class HuggingFaceClient(ModelClient):
             for tool in tools:
                 if tool.__name__ == tool_call["name"]:
                     tool_response = tool(**tool_call["arguments"])
-                    self.messages.append({"role": "tool", "name": tool_call["name"], "content": str(tool_response), "tool_call_id": "123456789"})
+                    self.messages.append(
+                        {
+                            "role": "tool",
+                            "name": tool_call["name"],
+                            "content": str(tool_response),
+                            "tool_call_id": "123456789",
+                        }
+                    )
 
                     logger.debug(f"Tool call response: {self.messages[-1]}")
 
@@ -309,11 +316,11 @@ class HuggingFaceClient(ModelClient):
 
         if streamer is None:
             response = self.tokenizer.decode(
-                output_tokens[0][len(input_tokens["input_ids"][0]):], skip_special_tokens=False
+                output_tokens[0][len(input_tokens["input_ids"][0]) :], skip_special_tokens=False
             )
 
             return response
-        
+
         return
 
     def chat(self, message: dict, generate_kwargs: dict = {}, tools: dict = None) -> str:
@@ -347,7 +354,7 @@ class HuggingFaceClient(ModelClient):
 
                 response = self._chat_generate(generate_kwargs, tools)
 
-            response = response[:-len("<|im_end|>")]
+            response = response[: -len("<|im_end|>")]
 
         # mistral: [TOOL_CALLS] [{"name": "get_current_temperature", "arguments": {"location": "Paris"}}]</s>
         elif self.model_id in [self.MODEL_MISTRAL_7B, self.MODEL_MISTRAL_SMALL_3_1_24B]:
@@ -359,7 +366,7 @@ class HuggingFaceClient(ModelClient):
                 self._handle_tool_calls(json.loads(tool_calls), tools)
                 response = self._chat_generate(generate_kwargs, tools)
 
-            response = response[:-len("</s>")].strip()
+            response = response[: -len("</s>")].strip()
 
         self.messages.append({"role": "assistant", "content": response})
 
@@ -404,13 +411,12 @@ class HuggingFaceClient(ModelClient):
                 self._chat_generate(generate_kwargs, tools, streamer=self.streamer)
             else:
                 # If there isn't a tool call, we've already processed the response, so we can yield the entire response and return
-                response = response[:-len(eos)].strip()
-                self.messages.append({"role": "assistant", "content": response})\
-                
+                response = response[: -len(eos)].strip()
+                self.messages.append({"role": "assistant", "content": response})
                 yield response
                 return
         elif self.model_id in [self.MODEL_MISTRAL_7B, self.MODEL_MISTRAL_SMALL_3_1_24B]:
-            next(self.streamer) # first part is always empty
+            next(self.streamer)  # first part is always empty
             response_part = next(self.streamer)
 
             eos = "</s>"
@@ -432,7 +438,7 @@ class HuggingFaceClient(ModelClient):
 
         for response_part in self.streamer:
             if response_part.endswith(eos):
-                response_part = response_part[:-len(eos)]
+                response_part = response_part[: -len(eos)]
             content += response_part
             yield response_part
 

@@ -97,7 +97,7 @@ if "model_client" not in st.session_state:
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,
-            "max_new_tokens": 512,
+            "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
     )
@@ -124,7 +124,7 @@ if prompt := st.chat_input("What's up?"):
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,
-            "max_new_tokens": 512,
+            "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
         tools=MODEL_TOOLS,

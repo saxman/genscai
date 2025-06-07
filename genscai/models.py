@@ -37,7 +37,7 @@ class ModelClient:
     MODEL_GPT_4O_MINI = None
     MODEL_GPT_4O = None
 
-    def __init__(self, model_id, model_kwargs):
+    def __init__(self, model_id: str, model_kwargs: dict = None):
         if model_id is None:
             raise ValueError("Model not supported by model client")
 
@@ -72,7 +72,7 @@ class AisuiteClient(ModelClient):
     MODEL_GPT_4O_MINI = "openai:gpt-4o-mini"
     MODEL_GPT_4O = "openai:gpt-4o"
 
-    def __init__(self, model_id):
+    def __init__(self, model_id: str):
         super().__init__(model_id, None)
         self.client = aisuite.Client()
 
@@ -105,7 +105,7 @@ class OllamaClient(ModelClient):
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
     MODEL_QWEN_3_8B = "qwen3:8b"
 
-    def __init__(self, model_id):
+    def __init__(self, model_id: str):
         super().__init__(model_id, None)
 
         ollama.pull(model_id)
@@ -225,7 +225,7 @@ class HuggingFaceClient(ModelClient):
         MODEL_QWEN_3_8B,
     ]
 
-    def __init__(self, model_id, model_kwargs=None):
+    def __init__(self, model_id: str, model_kwargs: dict = None):
         super().__init__(model_id, model_kwargs)
 
         if model_kwargs is None:
@@ -264,6 +264,9 @@ class HuggingFaceClient(ModelClient):
     def _chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> None:
         self.messages.append(message)
 
+        if "repeat_penalty" in generate_kwargs:
+            generate_kwargs["repetition_penalty"] = generate_kwargs.pop("repeat_penalty")
+
         if tools is not None:
             if self.model_id == HuggingFaceClient.MODEL_LLAMA_3_1_8B:
                 logger.warning(
@@ -282,36 +285,42 @@ class HuggingFaceClient(ModelClient):
 
         message["tool_calls"] = []
         for tool_call in tools_calls:
-            message["tool_calls"].append({"type": "function", "function": tool_call})
+            message["tool_calls"].append({"type": "function", "function": tool_call, "id": "123456789"})
 
             for tool in tools:
                 if tool.__name__ == tool_call["name"]:
                     tool_response = tool(**tool_call["arguments"])
-                    self.messages.append({"role": "tool", "name": tool_call["name"], "content": str(tool_response)})
+                    self.messages.append({"role": "tool", "name": tool_call["name"], "content": str(tool_response), "tool_call_id": "123456789"})
+
+                    logger.debug(f"Tool call response: {self.messages[-1]}")
 
                     break
+
+        logger.debug(f"Tool calls message: {message}")
 
         return
 
     def _chat_generate(self, generate_kwargs: dict, tools: dict, streamer: TextIteratorStreamer = None):
-        if "repeat_penalty" in generate_kwargs:
-            generate_kwargs["repetition_penalty"] = generate_kwargs.pop("repeat_penalty")
-
         input_tokens = self.tokenizer.apply_chat_template(
             self.messages, tools=tools, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         ).to(self.model.device)
 
         output_tokens = self.model.generate(**input_tokens, **generate_kwargs, streamer=streamer)
-        response = self.tokenizer.decode(
-            output_tokens[0][len(input_tokens["input_ids"][0]) :], skip_special_tokens=True
-        )
 
-        return response
+        if streamer is None:
+            response = self.tokenizer.decode(
+                output_tokens[0][len(input_tokens["input_ids"][0]):], skip_special_tokens=False
+            )
+
+            return response
+        
+        return
 
     def chat(self, message: dict, generate_kwargs: dict = {}, tools: dict = None) -> str:
         self._chat(message, generate_kwargs, tools)
 
         response = self._chat_generate(generate_kwargs, tools)
+        logger.debug(f"Response: {response}")
 
         # llama: {"name": "get_current_weather", "arguments": {"location": "Paris"}}
 
@@ -338,15 +347,19 @@ class HuggingFaceClient(ModelClient):
 
                 response = self._chat_generate(generate_kwargs, tools)
 
-        # mistral: [TOOL_CALLS] [{"name": "get_current_temperature", "arguments": {"location": "Paris"}}]
+            response = response[:-len("<|im_end|>")]
+
+        # mistral: [TOOL_CALLS] [{"name": "get_current_temperature", "arguments": {"location": "Paris"}}]</s>
         elif self.model_id in [self.MODEL_MISTRAL_7B, self.MODEL_MISTRAL_SMALL_3_1_24B]:
             if "[TOOL_CALLS]" in response:
                 tool_calls_start = response.index("[TOOL_CALLS]") + len("[TOOL_CALLS]")
-                tool_calls = response[tool_calls_start:].strip()
+                tools_calls_end = response.index("</s>")
+                tool_calls = response[tool_calls_start:tools_calls_end].strip()
 
-                self._handle_tool_calls(tool_calls, tools)
-
+                self._handle_tool_calls(json.loads(tool_calls), tools)
                 response = self._chat_generate(generate_kwargs, tools)
+
+            response = response[:-len("</s>")].strip()
 
         self.messages.append({"role": "assistant", "content": response})
 
@@ -356,9 +369,11 @@ class HuggingFaceClient(ModelClient):
         self._chat(message, generate_kwargs, tools)
 
         if not hasattr(self, "streamer"):
-            self.streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
+            self.streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=False)
 
         self._chat_generate(generate_kwargs, tools, streamer=self.streamer)
+
+        content = ""
 
         # If the model is Qwen, the we can't stream the response since we need to process the entire response to detect tool calls
         if self.model_id == self.MODEL_QWEN_3_8B:
@@ -372,6 +387,8 @@ class HuggingFaceClient(ModelClient):
 
             response = response[think_end + len("</think>") :].strip()
 
+            eos = "<|im_end|>"
+
             if "<tool_call>" in response:
                 tool_calls = []
                 while "<tool_call>" in response:
@@ -384,16 +401,38 @@ class HuggingFaceClient(ModelClient):
                     response = response[tool_call_end + len("</tool_call>") :].strip()
 
                 self._handle_tool_calls(tool_calls, tools)
-
                 self._chat_generate(generate_kwargs, tools, streamer=self.streamer)
             else:
-                # If there isn't a tool call, we've already processed the response, so we can yield it and return
-                self.messages.append({"role": "assistant", "content": response})
+                # If there isn't a tool call, we've already processed the response, so we can yield the entire response and return
+                response = response[:-len(eos)].strip()
+                self.messages.append({"role": "assistant", "content": response})\
+                
                 yield response
                 return
+        elif self.model_id in [self.MODEL_MISTRAL_7B, self.MODEL_MISTRAL_SMALL_3_1_24B]:
+            next(self.streamer) # first part is always empty
+            response_part = next(self.streamer)
 
-        content = ""
+            eos = "</s>"
+
+            if "[TOOL_CALLS]" in response_part:
+                response = response_part
+                for response_part in self.streamer:
+                    response += response_part
+
+                tool_calls_start = response.index("[TOOL_CALLS]") + len("[TOOL_CALLS]")
+                tool_call_end = response.index("</s>")
+                tool_calls = response[tool_calls_start:tool_call_end].strip()
+
+                self._handle_tool_calls(json.loads(tool_calls), tools)
+                self._chat_generate(generate_kwargs, tools, streamer=self.streamer)
+            else:
+                content = response_part
+                yield content
+
         for response_part in self.streamer:
+            if response_part.endswith(eos):
+                response_part = response_part[:-len(eos)]
             content += response_part
             yield response_part
 

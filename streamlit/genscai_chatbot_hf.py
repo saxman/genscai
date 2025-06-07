@@ -1,7 +1,7 @@
 import streamlit as st
 
 from genscai import paths
-from genscai.models import OllamaClient as ModelClient
+from genscai.models import HuggingFaceClient as ModelClient
 
 import torch
 import chromadb
@@ -11,8 +11,8 @@ import json
 torch.classes.__path__ = []
 
 MODELS = [
-    ModelClient.MODEL_MISTRAL_SMALL_3_1_24B,
     ModelClient.MODEL_QWEN_3_8B,
+    ModelClient.MODEL_MISTRAL_SMALL_3_1_24B,
     ModelClient.MODEL_LLAMA_3_2_3B,
 ]
 
@@ -83,8 +83,11 @@ with st.sidebar:
         st.session_state.model_id = model_id
     elif st.session_state.model_id != model_id:
         model_client = st.session_state.model_client
+        messages = model_client.messages
+        del model_client
+
         st.session_state.model_client = ModelClient(model_id)
-        st.session_state.model_client.messages = model_client.messages
+        st.session_state.model_client.messages = messages
 
 # Initialize the session state if we don't already have a model loaded
 if "model_client" not in st.session_state:
@@ -97,7 +100,7 @@ if "model_client" not in st.session_state:
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,
-            "max_new_tokens": 512,
+            "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
     )
@@ -124,7 +127,7 @@ if prompt := st.chat_input("What's up?"):
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,
-            "max_new_tokens": 512,
+            "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
         tools=MODEL_TOOLS,

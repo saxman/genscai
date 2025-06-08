@@ -28,9 +28,17 @@ def test_chat(model_client):
     message = {"role": model_client.system_role, "content": "What is the capital of France?"}
 
     response = model_client.chat(message)
-    
-    assert isinstance(response, str)
+
     assert "Paris" in response
+    assert len(model_client.messages) == 2
+
+    # The model should know that we're talking about capitals
+    message = {"role": "user", "content": "How about Germany's?"}
+
+    response = model_client.chat(message)
+
+    assert "Berlin" in response
+    assert len(model_client.messages) == 4
 
 def test_chat_streamed(model_client):
     message = {"role": model_client.system_role, "content": "What is the capital of France?"}
@@ -46,3 +54,4 @@ def test_chat_streamed(model_client):
         content += response_part
 
     assert "Paris" in content
+    assert len(model_client.messages) == 2

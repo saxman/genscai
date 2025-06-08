@@ -242,24 +242,16 @@ class HuggingFaceClient(ModelClient):
             logger.info("Emptying MPS cache")
             torch.mps.empty_cache()
 
-    # TODO: don't use chat template for generate, use the tokenizer directly
-    def generate(self, prompt: str, generate_kwargs: dict) -> str:
+    def generate(self, prompt: str, generate_kwargs: dict = {}) -> str:
         generate_kwargs["bos_token_id"] = self.tokenizer.bos_token_id
         generate_kwargs["pad_token_id"] = self.tokenizer.eos_token_id
         generate_kwargs["eos_token_id"] = self.tokenizer.eos_token_id
 
-        messages = [{"role": "user", "content": prompt}]
+        model_inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        generated_ids = self.model.generate(**model_inputs)
+        response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        input_ids = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
-            self.model.device
-        )
-
-        outputs = self.model.generate(input_ids, **generate_kwargs)
-
-        response = outputs[0][input_ids.shape[-1] :]
-        response_text = self.tokenizer.decode(response, skip_special_tokens=True)
-
-        return response_text
+        return response
 
     def _chat(self, message: dict, generate_kwargs: dict = None, tools: dict = None) -> None:
         self.messages.append(message)
@@ -435,6 +427,8 @@ class HuggingFaceClient(ModelClient):
             else:
                 content = response_part
                 yield content
+        elif self.model_id == self.MODEL_LLAMA_3_1_8B:
+            eos = "<|eot_id|>"
 
         for response_part in self.streamer:
             if response_part.endswith(eos):

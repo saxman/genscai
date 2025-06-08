@@ -359,6 +359,10 @@ class HuggingFaceClient(ModelClient):
                 response = self._chat_generate(generate_kwargs, tools)
 
             response = response[: -len("</s>")].strip()
+        
+        elif self.model_id == self.MODEL_LLAMA_3_1_8B:
+            # TODO: handle tool calls for Llama 3.1 8B
+            response = response[: -len("<|eot_id|>")].strip()
 
         self.messages.append({"role": "assistant", "content": response})
 
@@ -375,6 +379,7 @@ class HuggingFaceClient(ModelClient):
         content = ""
 
         # If the model is Qwen, the we can't stream the response since we need to process the entire response to detect tool calls
+        # TODO: figure out how to stream non-tool call responses for Qwen models
         if self.model_id == self.MODEL_QWEN_3_8B:
             response = ""
             for response_part in self.streamer:
@@ -428,6 +433,7 @@ class HuggingFaceClient(ModelClient):
                 content = response_part
                 yield content
         elif self.model_id == self.MODEL_LLAMA_3_1_8B:
+            # TODO: handle tool calls for Llama 3.1 8B
             eos = "<|eot_id|>"
 
         for response_part in self.streamer:

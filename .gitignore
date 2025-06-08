@@ -162,3 +162,6 @@ output/
 
 # uv
 uv.lock
+
+# VS Code
+.vscode/

@@ -46,13 +46,6 @@ class ModelClient:
 
         self.messages = []
 
-    @property
-    def system_role(self) -> str:
-        if "mistral" in self.model_id:
-            return "user"
-        else:
-            return "system"
-
 
 class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
@@ -106,17 +99,21 @@ class OllamaClient(ModelClient):
     MODEL_QWEN_3_8B = "qwen3:8b"
 
     TOOL_MODELS = [
-        MODEL_LLAMA_3_1_8B,
-        MODEL_LLAMA_3_2_3B,
-        MODEL_MISTRAL_7B,
         MODEL_MISTRAL_SMALL_3_1_24B,
+        MODEL_MISTRAL_7B,
         MODEL_QWEN_3_8B,
+        MODEL_LLAMA_3_2_3B,
+        MODEL_LLAMA_3_1_8B,
     ]
 
     def __init__(self, model_id: str):
         super().__init__(model_id, None)
 
         ollama.pull(model_id)
+
+    @property
+    def system_role(self) -> str:
+        return "system"
 
     # for generate_kwargs, see https://github.com/ollama/ollama/blob/main/docs/modelfile.md#valid-parameters-and-values
     def generate(self, prompt: str, generate_kwargs: dict) -> str:
@@ -221,17 +218,24 @@ class HuggingFaceClient(ModelClient):
     MODEL_QWEN_3_8B = "Qwen/Qwen3-8B"
 
     TOOL_MODELS = [
-        MODEL_LLAMA_3_1_8B,
-        MODEL_LLAMA_3_2_3B,
-        MODEL_MISTRAL_7B,
         MODEL_MISTRAL_SMALL_3_1_24B,
+        MODEL_MISTRAL_7B,
         MODEL_QWEN_3_8B,
+        MODEL_LLAMA_3_2_3B,
+        MODEL_LLAMA_3_1_8B,
     ]
 
     DEFAULT_MODEL_KWARGS = {
         "device_map": "auto",
         "torch_dtype": "auto",
     }
+
+    @property
+    def system_role(self) -> str:
+        if "mistral" in self.model_id:
+            return "user"
+        else:
+            return "system"
 
     def __init__(self, model_id: str, model_kwargs: dict = None):
         super().__init__(model_id, model_kwargs)

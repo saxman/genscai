@@ -1,19 +1,13 @@
 import streamlit as st
 
-from genscai.models import OllamaClient as ModelClient
+from genscai.models import HuggingFaceClient, OllamaClient
 from genscai.tools import search_research_articles
 
-import json
 import torch
+import json
 
-# Avoid torch RuntimeError when using Hugging Face Transformers (used by genscai.models)
+# Avoid torch RuntimeError when using Hugging Face Transformers
 torch.classes.__path__ = []
-
-MODELS = [
-    ModelClient.MODEL_MISTRAL_SMALL_3_1_24B,
-    ModelClient.MODEL_QWEN_3_8B,
-    ModelClient.MODEL_LLAMA_3_2_3B,
-]
 
 SYSTEM_MESSAGE = """
 You are a friendly chatbot that assists the user with research in infectious diseases and infectious disease modeling.
@@ -22,35 +16,52 @@ Always provide links to the articles you reference.
 Please introduce yourself.
 """
 
+MODEL_CLIENTS = [
+    OllamaClient,
+    HuggingFaceClient,
+]
+
 MODEL_TOOLS = [search_research_articles]
+
+# Initialize the session state if we don't already have a model loaded
+if "model_client" not in st.session_state:
+    st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
+    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
 
 with st.sidebar:
     st.title("IDM Research Assistant")
     st.write("Discuss infectious disease modeling with access to current disease modeling research.")
 
-    model_id = st.selectbox("Model", options=MODELS)
+    model_id = st.selectbox("Model", options=st.session_state.model_client.TOOL_MODELS)
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.15, step=0.01)
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
     repeat_penalty = st.sidebar.slider("repeat_penalty", min_value=0.9, max_value=1.5, value=1.1, step=0.1)
 
+    model_client = st.selectbox("Model Client", options=MODEL_CLIENTS, format_func=lambda x: x.__name__)
+
+    if not isinstance(st.session_state.model_client, model_client):
+        del st.session_state.model_client
+
+        st.session_state.model_id = model_client.TOOL_MODELS[0]
+        st.session_state.model_client = model_client(st.session_state.model_id)
+
+        st.rerun()
+    elif st.session_state.model_id != model_id:
+        del st.session_state.model_client
+
+        st.session_state.model_id = model_id
+        st.session_state.model_client = model_client(st.session_state.model_id)
+
+        st.rerun()
+
     if st.button("Reset chat"):
         st.session_state.clear()
 
-    # Set the model id in the sesstion state, or update the model client if the model id has changed
-    if "model_id" not in st.session_state:
-        st.session_state.model_id = model_id
-    elif st.session_state.model_id != model_id:
-        model_client = st.session_state.model_client
-        st.session_state.model_client = ModelClient(model_id)
-        st.session_state.model_client.messages = model_client.messages
+# Either generate and display the system message or display the chat message history
+if len(st.session_state.model_client.messages) == 0:
+    message = {"role": st.session_state.model_client.system_role, "content": SYSTEM_MESSAGE}
 
-# Initialize the session state if we don't already have a model loaded
-if "model_client" not in st.session_state:
-    model_client = st.session_state.model_client = ModelClient(model_id)
-
-    message = {"role": model_client.system_role, "content": SYSTEM_MESSAGE}
-
-    streamed_response = model_client.chat_streamed(
+    streamed_response = st.session_state.model_client.chat_streamed(
         message,
         generate_kwargs={
             "temperature": temperature,

@@ -31,8 +31,9 @@ dependencies = [
     "langchain-text-splitters",
     "streamlit",
     "pynvml",
-    "scipy", # force version bump to latest to support numpy 2
-    "pyarrow" # force version bump to latest to support numpy 2
+    "scipy", # force version bump to latest to support numpy 2 # force version bump to latest to support numpy 2
+    "pyarrow",
+    "mcp",
 ]
 
 # optional pip dependencies

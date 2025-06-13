@@ -105,6 +105,14 @@ class OllamaClient(ModelClient):
     MODEL_QWEN_2_5_7B = "qwen2.5:7b"
     MODEL_QWEN_3_8B = "qwen3:8b"
 
+    TOOL_MODELS = [
+        MODEL_LLAMA_3_1_8B,
+        MODEL_LLAMA_3_2_3B,
+        MODEL_MISTRAL_7B,
+        MODEL_MISTRAL_SMALL_3_1_24B,
+        MODEL_QWEN_3_8B,
+    ]
+
     def __init__(self, model_id: str):
         super().__init__(model_id, None)
 
@@ -212,11 +220,6 @@ class HuggingFaceClient(ModelClient):
     MODEL_QWEN_2_5_7B = "Qwen/Qwen2.5-7B-Instruct-1M"
     MODEL_QWEN_3_8B = "Qwen/Qwen3-8B"
 
-    DEFAULT_MODEL_KWARGS = {
-        "device_map": "auto",
-        "torch_dtype": "auto",
-    }
-
     TOOL_MODELS = [
         MODEL_LLAMA_3_1_8B,
         MODEL_LLAMA_3_2_3B,
@@ -224,6 +227,11 @@ class HuggingFaceClient(ModelClient):
         MODEL_MISTRAL_SMALL_3_1_24B,
         MODEL_QWEN_3_8B,
     ]
+
+    DEFAULT_MODEL_KWARGS = {
+        "device_map": "auto",
+        "torch_dtype": "auto",
+    }
 
     def __init__(self, model_id: str, model_kwargs: dict = None):
         super().__init__(model_id, model_kwargs)

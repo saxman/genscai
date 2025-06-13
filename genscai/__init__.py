@@ -6,6 +6,7 @@ from . import prompts
 from . import data
 from . import classification
 from . import training
+from . import tools
 
 from .prompts import PromptCatalog
 from .prompts import Prompt
@@ -20,6 +21,7 @@ __all__ = [
     "data",
     "classification",
     "training",
+    "tools",
     "PromptCatalog",
     "Prompt",
     "ModelClient",

@@ -359,7 +359,7 @@ class HuggingFaceClient(ModelClient):
                 response = self._chat_generate(generate_kwargs, tools)
 
             response = response[: -len("</s>")].strip()
-        
+
         elif self.model_id == self.MODEL_LLAMA_3_1_8B:
             # TODO: handle tool calls for Llama 3.1 8B
             response = response[: -len("<|eot_id|>")].strip()

@@ -5,10 +5,12 @@ from genscai.models import ModelClient, HuggingFaceClient
 
 MODELS = [HuggingFaceClient.MODEL_LLAMA_3_1_8B, HuggingFaceClient.MODEL_MISTRAL_7B]
 
+
 @pytest.fixture(params=MODELS)
 def model_client(request) -> Iterable[ModelClient]:
     client = HuggingFaceClient(request.param)
     yield client
+
 
 def test_generate(model_client):
     prompt = "What is the capital of France?"
@@ -17,12 +19,14 @@ def test_generate(model_client):
     assert isinstance(response, str)
     assert "Paris" in response
 
+
 def test_generate_with_parameters(model_client):
     prompt = "What is the capital of France?"
     response = model_client.generate(prompt, generate_kwargs={"max_new_tokens": 1})
-    
+
     assert isinstance(response, str)
     assert "Paris" in response
+
 
 def test_chat(model_client):
     message = {"role": model_client.system_role, "content": "What is the capital of France?"}
@@ -39,6 +43,7 @@ def test_chat(model_client):
 
     assert "Berlin" in response
     assert len(model_client.messages) == 4
+
 
 def test_chat_streamed(model_client):
     message = {"role": model_client.system_role, "content": "What is the capital of France?"}

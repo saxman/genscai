@@ -63,9 +63,9 @@ if "model_client" not in st.session_state:
     with st.chat_message("assistant"):
         response = st.write_stream(streamed_response)
 else:
-    # Only render assistant and user messages (not tool messages)
+    # Only render assistant and user messages (not tool messages) and not the system (first) message
     messages = [
-        x for x in st.session_state.model_client.messages if x["role"] in ["assistant", "user"] and "content" in x
+        x for x in st.session_state.model_client.messages[1:] if x["role"] in ["assistant", "user"] and "content" in x
     ]
     for message in messages:
         with st.chat_message(message["role"]):

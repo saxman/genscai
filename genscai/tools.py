@@ -5,6 +5,7 @@ import chromadb
 KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
 KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
 
+
 def search_research_articles(search_request: str) -> str:
     """
     Search for current research articles in infectious diseases and disease modeling per a given search request.

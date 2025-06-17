@@ -1,9 +1,9 @@
 from mcp.server.fastmcp import FastMCP
 
-server = FastMCP("Local Agent Helper")
+mcp = FastMCP("Local Agent Helper")
 
 
-@server.tool()
+@mcp.tool()
 def ls(directory: str) -> str:
     "List the contents of a directory."
     import os
@@ -11,7 +11,7 @@ def ls(directory: str) -> str:
     return "\n".join(os.listdir(directory))
 
 
-@server.tool()
+@mcp.tool()
 def cat(file: str) -> str:
     "Read the contents of a file."
     try:
@@ -21,7 +21,7 @@ def cat(file: str) -> str:
         return ""
 
 
-@server.tool()
+@mcp.tool()
 def echo(message: str, file: str) -> str:
     "Write text to a file."
     try:
@@ -30,3 +30,8 @@ def echo(message: str, file: str) -> str:
             return "success"
     except:
         return "failed"
+
+
+if __name__ == "__main__":
+    # Initialize and run the server
+    mcp.run(transport="stdio")

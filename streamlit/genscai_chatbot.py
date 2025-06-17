@@ -2,6 +2,7 @@ import streamlit as st
 
 from genscai.models import HuggingFaceClient, OllamaClient
 from genscai.tools import search_research_articles
+from genscai.tools import MCPClient
 
 import torch
 import json
@@ -27,6 +28,9 @@ MODEL_TOOLS = [search_research_articles]
 if "model_client" not in st.session_state:
     st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
     st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
+    st.session_state.mcp_client = MCPClient()
+
+    print(st.session_state.mcp_client.list_tools())
 
 with st.sidebar:
     st.title("IDM Research Assistant")
@@ -39,6 +43,8 @@ with st.sidebar:
 
     model_client = st.selectbox("Model Client", options=MODEL_CLIENTS, format_func=lambda x: x.__name__)
 
+    # If the specified model client has changes, we need to create a new intsance of it reset to the first tool model
+    # Otherwise, if the specified model has changed, we need to create a new instance of the model client with the new model
     if not isinstance(st.session_state.model_client, model_client):
         del st.session_state.model_client
 
@@ -57,7 +63,7 @@ with st.sidebar:
     if st.button("Reset chat"):
         st.session_state.clear()
 
-# Either generate and display the system message or display the chat message history
+# Either generate and stream the system message response or display the chat message history
 if len(st.session_state.model_client.messages) == 0:
     message = {"role": st.session_state.model_client.system_role, "content": SYSTEM_MESSAGE}
 
@@ -96,7 +102,8 @@ if prompt := st.chat_input("What's up?"):
             "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
-        tools=MODEL_TOOLS,
+        # tools=MODEL_TOOLS,
+        tools=st.session_state.mcp_client.list_tools(),
     )
 
     with st.chat_message("assistant"):

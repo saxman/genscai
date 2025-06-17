@@ -35,7 +35,8 @@ dependencies = [
     "pyarrow",
     "mcp",
     "python-dotenv",
-    "fastmcp",
+    "fastmcp>=2",
+    "nest_asyncio",
 ]
 
 # optional pip dependencies

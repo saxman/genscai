@@ -163,9 +163,7 @@ class OllamaClient(ModelClient):
                     if not hasattr(self, "mcp_client"):
                         self.mcp_client = MCPClient()
 
-                    tool_response = self.mcp_client.call_tool(
-                        tool["function"]["name"], tool_call.function.arguments
-                    )
+                    tool_response = self.mcp_client.call_tool(tool["function"]["name"], tool_call.function.arguments)
 
                     # TODO: handle different tool response types, errors, and multiple responses
                     if tool_response[0].type != "text":
@@ -175,11 +173,9 @@ class OllamaClient(ModelClient):
 
                     content = tool_response[0].text
 
-                    self.messages.append(
-                        {"role": "tool", "name": tool["function"]["name"], "content": content}
-                    )
+                    self.messages.append({"role": "tool", "name": tool["function"]["name"], "content": content})
 
-                    break 
+                    break
 
         return
 

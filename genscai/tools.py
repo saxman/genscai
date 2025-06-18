@@ -9,18 +9,13 @@ import asyncio
 KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
 KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
 
-MCP_CONFIG = {
-    "mcpServers": {
-        # "weather": {"url": "https://weather-api.example.com/mcp"},
-        "genscai": {"command": "python", "args": ["../mcp/server.py"]}
-    }
-}
-
 mcp = FastMCP("Genscai MCP Server")
+
 
 @mcp.tool
 def hello(name: str) -> str:
     return f"Hello, {name}!"
+
 
 @mcp.tool()
 def search_research_articles(search_request: str) -> str:
@@ -59,11 +54,10 @@ def search_research_articles(search_request: str) -> str:
 
     return content
 
-if __name__ == "__main__":
-    mcp.run()
-
 
 class MCPClient:
+    """A MCP client that wraps the FastMCP client for easier tool calls and management."""
+
     def __init__(self, config: dict = None):
         self.config = config
         self.loop = asyncio.new_event_loop()
@@ -89,7 +83,7 @@ class MCPClient:
 
     def list_tools(self):
         return self.loop.run_until_complete(self._list_tools())
-    
+
     def get_tools(self) -> list[dict]:
         tools = []
 
@@ -97,36 +91,12 @@ class MCPClient:
             tools.append(
                 {
                     "type": "function",
-                    "function": {
-                        "name": tool.name,
-                        "description": tool.description,
-                        "parameters": tool.inputSchema
-                    }
+                    "function": {"name": tool.name, "description": tool.description, "parameters": tool.inputSchema},
                 }
             )
-        
+
         return tools
 
-"""
-{
-      'type': 'function',
-      'function': {
-        'name': 'get_current_weather',
-        'description': 'Get the current weather for a city',
-        'parameters': {
-          'type': 'object',
-          'properties': {
-            'city': {
-              'type': 'string',
-              'description': 'The name of the city',
-            },
-          },
-          'required': ['city'],
-        },
-      },
-    },
-"""
 
-"""
-{'properties': {'search_request': {'title': 'Search Request', 'type': 'string'}}, 'required': ['search_request'], 'title': 'search_research_articlesArguments', 'type': 'object'}
-"""
+if __name__ == "__main__":
+    mcp.run()

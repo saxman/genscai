@@ -12,17 +12,20 @@ KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
 MCP_CONFIG = {
     "mcpServers": {
         # "weather": {"url": "https://weather-api.example.com/mcp"},
-        "assistant": {"command": "python", "args": ["../mcp/server.py"]}
+        "genscai": {"command": "python", "args": ["../mcp/server.py"]}
     }
 }
 
 mcp = FastMCP("Genscai MCP Server")
 
+@mcp.tool
+def hello(name: str) -> str:
+    return f"Hello, {name}!"
 
 @mcp.tool()
 def search_research_articles(search_request: str) -> str:
     """
-    Search for current research articles in infectious diseases and disease modeling per a given search request.
+    Search for current research articles about infectious diseases and disease modeling per a given search request.
 
     Args:
         search_request: The information that the user is looking for.
@@ -56,6 +59,9 @@ def search_research_articles(search_request: str) -> str:
 
     return content
 
+if __name__ == "__main__":
+    mcp.run()
+
 
 class MCPClient:
     def __init__(self, config: dict = None):
@@ -83,3 +89,44 @@ class MCPClient:
 
     def list_tools(self):
         return self.loop.run_until_complete(self._list_tools())
+    
+    def get_tools(self) -> list[dict]:
+        tools = []
+
+        for tool in self.list_tools():
+            tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": tool.inputSchema
+                    }
+                }
+            )
+        
+        return tools
+
+"""
+{
+      'type': 'function',
+      'function': {
+        'name': 'get_current_weather',
+        'description': 'Get the current weather for a city',
+        'parameters': {
+          'type': 'object',
+          'properties': {
+            'city': {
+              'type': 'string',
+              'description': 'The name of the city',
+            },
+          },
+          'required': ['city'],
+        },
+      },
+    },
+"""
+
+"""
+{'properties': {'search_request': {'title': 'Search Request', 'type': 'string'}}, 'required': ['search_request'], 'title': 'search_research_articlesArguments', 'type': 'object'}
+"""

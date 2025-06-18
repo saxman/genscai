@@ -10,6 +10,8 @@ import logging
 from typing import Iterator
 import json
 
+from genscai.tools import MCPClient
+
 log.set_verbosity_error()
 
 logger = logging.getLogger(__name__)
@@ -148,13 +150,27 @@ class OllamaClient(ModelClient):
             )
 
             for tool in tools:
-                if tool.__name__ == tool_call.function.name:
+                # If the tool is a funtion, call it directly. Otherwise, use the MCP client to call the tool.
+                if hasattr(tool, "__call__") and tool.__name__ == tool_call.function.name:
                     tool_response = tool(**tool_call.function.arguments)
                     self.messages.append(
                         {"role": "tool", "name": tool_call.function.name, "content": str(tool_response)}
                     )
 
                     break
+                elif tool["type"] == "function":
+                    if not hasattr(self, "mcp_client"):
+                        self.mcp_client = MCPClient()
+
+                    tool_response = self.mcp_client.call_tool(
+                        tool["function"]["name"], tool_call.function.arguments
+                    )
+
+                    self.messages.append(
+                        {"role": "tool", "name": tool["function"]["name"], "content": str(tool_response)}
+                    )
+
+                    break 
 
         return
 

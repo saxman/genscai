@@ -48,6 +48,8 @@ class ModelClient:
 
         self.messages = []
 
+        self.mcp_client = None
+
 
 class AisuiteClient(ModelClient):
     MODEL_LLAMA_3_1_8B = "ollama:llama3.1:8b"
@@ -160,8 +162,10 @@ class OllamaClient(ModelClient):
 
                     break
                 elif tool["type"] == "function" and tool["function"]["name"] == tool_call.function.name:
-                    if not hasattr(self, "mcp_client"):
-                        self.mcp_client = MCPClient()
+                    if self.mcp_client is None:
+                        raise ValueError(
+                            "MCP client not initialized. Please initialize and assign an MCP client before using MCP tools."
+                        )
 
                     tool_response = self.mcp_client.call_tool(tool["function"]["name"], tool_call.function.arguments)
 

@@ -3,7 +3,6 @@ from genscai.data import load_midas_data
 import pandas as pd
 from pathlib import Path
 
-# Define file paths
 modeling_papers_path = paths.data / "modeling_papers_0.json"
 
 # Output CSV file paths

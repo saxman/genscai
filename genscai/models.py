@@ -150,15 +150,16 @@ class OllamaClient(ModelClient):
             )
 
             for tool in tools:
-                # If the tool is a funtion, call it directly. Otherwise, use the MCP client to call the tool.
+                # If the tool is a callable python function, call it directly. Otherwise, use the MCP client to call the tool.
                 if hasattr(tool, "__call__") and tool.__name__ == tool_call.function.name:
                     tool_response = tool(**tool_call.function.arguments)
+
                     self.messages.append(
                         {"role": "tool", "name": tool_call.function.name, "content": str(tool_response)}
                     )
 
                     break
-                elif tool["type"] == "function":
+                elif tool["type"] == "function" and tool["function"]["name"] == tool_call.function.name:
                     if not hasattr(self, "mcp_client"):
                         self.mcp_client = MCPClient()
 
@@ -166,8 +167,16 @@ class OllamaClient(ModelClient):
                         tool["function"]["name"], tool_call.function.arguments
                     )
 
+                    # TODO: handle different tool response types, errors, and multiple responses
+                    if tool_response[0].type != "text":
+                        raise ValueError(
+                            f"Tool response type {tool_response[0].type} not supported. Supported types: text"
+                        )
+
+                    content = tool_response[0].text
+
                     self.messages.append(
-                        {"role": "tool", "name": tool["function"]["name"], "content": str(tool_response)}
+                        {"role": "tool", "name": tool["function"]["name"], "content": content}
                     )
 
                     break 

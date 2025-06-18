@@ -22,15 +22,13 @@ MODEL_CLIENTS = [
     HuggingFaceClient,
 ]
 
-MODEL_TOOLS = [search_research_articles]
+DEFAULT_TOOLS = [search_research_articles]
 
 # Initialize the session state if we don't already have a model loaded
 if "model_client" not in st.session_state:
     st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
     st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
     st.session_state.mcp_client = MCPClient()
-
-    print(st.session_state.mcp_client.list_tools())
 
 with st.sidebar:
     st.title("IDM Research Assistant")
@@ -102,8 +100,7 @@ if prompt := st.chat_input("What's up?"):
             "max_new_tokens": 1024,
             "repeat_penalty": repeat_penalty,
         },
-        # tools=MODEL_TOOLS,
-        tools=st.session_state.mcp_client.list_tools(),
+        tools=st.session_state.mcp_client.get_tools(),
     )
 
     with st.chat_message("assistant"):

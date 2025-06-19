@@ -23,34 +23,7 @@ Python 3.10+
 For using Hugging Face models locally (e.g. using Transformers), you'll need SentencePiece, which will be installed during project setup (below). SentencePiece requires Python 3.11 or earlier, however. To use SentencePiece, you can install Python 3.11 and set up your virtual environment using 'python3.11 -m venv .venv' (or 'uv venv --python 3.11' if using uv). Alternatively, if you don't intend to run Hugging Face models locally, ignore the build error when running 'pip install' during setup.
 
 
-## Setup (without uv)
-
-Set up a virtual Python environment:
-```
-python3 -m venv .venv
-```
-
-Activate (enter) the virtual environment:
-```
-source .venv/bin/activate
-```
-
-Build the genscai module and install dependencies:
-```
-pip install -e .
-```
-
-To use developer tools such as black and pytest, install dev dependencies:
-```
-pip install -e '.[dev]'
-```
-
-For editing and running the example notebooks locally, you'll need to separately install Jupyter Lab:
-```
-pip install jupyterlab
-```
-
-## Setup (with uv)
+## Setup (with uv) [recommended]
 Set up a virtual Python environment. The '--seed' argument has uv add pip and setuptools to the virtual environment. This is optional, and is only useful if using an IDE that accesses pip directly (e.g. Visual Studio Code). 
 ```
 uv venv --seed
@@ -80,6 +53,40 @@ And finally, for running LLMs locally on systems with nvidia GPUs:
 ```
 uv pip install -e '.[cuda]'
 ```
+
+
+## Setup (without uv)
+
+Set up a virtual Python environment:
+```
+python3 -m venv .venv
+```
+
+Activate (enter) the virtual environment:
+```
+source .venv/bin/activate
+```
+
+Build the genscai module and install dependencies:
+```
+pip install -e .
+```
+
+To use developer tools such as ruff and pytest, install the 'dev' dependencies:
+```
+pip install -e '.[dev]'
+```
+
+For editing and running the example notebooks, you'll want to install the following supporting modules:
+```
+pip install -e '.[notebooks]'
+```
+
+And finally, for running LLMs locally on systems with nvidia GPUs:
+```
+pip install -e '.[cuda]'
+```
+
 
 ## References
 - MIDAS abstracts: [link](https://midasnetwork.us/papers/)

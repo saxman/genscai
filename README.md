@@ -66,14 +66,19 @@ Build the genscai module and install dependencies:
 uv pip install -e .
 ```
 
-To use developer tools such as black and pytest, install dev dependencies:
+To use developer tools such as ruff and pytest, install the 'dev' dependencies:
 ```
 uv pip install -e '.[dev]'
 ```
 
-For editing and running the example notebooks locally, you'll need to separately install Jupyter Lab:
+For editing and running the example notebooks, you'll want to install the following supporting modules:
 ```
-uv pip install jupyterlab
+uv pip install -e '.[notebooks]'
+```
+
+And finally, for running LLMs locally on systems with nvidia GPUs:
+```
+uv pip install -e '.[cuda]'
 ```
 
 ## References

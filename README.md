@@ -2,9 +2,9 @@
 
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-<a href="https://github.com/saxman/genscai/blob/master/LICENSE" target="_blank">
-    <img src="https://img.shields.io/static/v1?label=license&message=Apache 2.0&color=white" alt="License">
-</a>
+![GitHub License](https://img.shields.io/github/license/saxman/genscai)
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fsaxman%2Fgenscai%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+
   
 'genscai' is a suite of generative AI tools and recipes for science and research.
 

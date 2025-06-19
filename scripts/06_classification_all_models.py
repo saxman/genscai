@@ -1,11 +1,11 @@
 import pandas as pd
 
-from genscai.models import HuggingFaceClient
+from aimu.models import HuggingFaceClient
 from genscai.classification import CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS
 from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data
-from genscai.prompts import PromptCatalog
+from aimu.prompts import PromptCatalog
 
 MODEL_IDS = [
     HuggingFaceClient.MODEL_LLAMA_3_1_8B,

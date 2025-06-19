@@ -1,8 +1,8 @@
 import streamlit as st
 
-from genscai.models import HuggingFaceClient, OllamaClient
-from genscai.tools import search_research_articles
-from genscai.tools import MCPClient
+from aimu.models import HuggingFaceClient, OllamaClient
+from aimu.tools import search_research_articles
+from aimu.tools import MCPClient
 
 import torch
 import json

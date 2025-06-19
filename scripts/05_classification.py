@@ -1,8 +1,8 @@
-from genscai.models import HuggingFaceClient
+from aimu.models import HuggingFaceClient
 from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data
-from genscai.prompts import PromptCatalog
+from aimu.prompts import PromptCatalog
 import pandas as pd
 
 MODEL_KWARGS = {

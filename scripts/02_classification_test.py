@@ -1,4 +1,4 @@
-from genscai.models import HuggingFaceClient as ModelClient
+from aimu.models import HuggingFaceClient as ModelClient
 import genscai.data as gd
 import genscai.classification as gc
 

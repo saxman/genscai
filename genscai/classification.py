@@ -2,7 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 import logging
 
-from genscai.models import ModelClient
+from aimu.models import ModelClient
 
 logger = logging.getLogger(__name__)
 

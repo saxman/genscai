@@ -1,8 +1,8 @@
 import logging
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient
-from genscai.prompts import PromptCatalog
+from aimu.models import HuggingFaceClient as ModelClient
+from aimu.prompts import PromptCatalog
 from genscai.data import load_classification_training_data
 import genscai.classification as gc
 

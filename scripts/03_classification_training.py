@@ -1,7 +1,7 @@
 import logging
 
 from genscai import paths
-from genscai.models import HuggingFaceClient as ModelClient
+from aimu.models import HuggingFaceClient as ModelClient
 from genscai.classification import (
     CLASSIFICATION_TASK_PROMPT_TEMPLATE,
     CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,

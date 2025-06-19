@@ -63,3 +63,8 @@ include = ["genscai*"]
 [tool.ruff]
 line-length = 120
 target-version = "py39"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]

@@ -30,7 +30,6 @@ dependencies = [
     "sentence-transformers",
     "langchain-text-splitters",
     "streamlit",
-    "pynvml",
     "scipy", # force version bump to latest to support numpy 2
     "pyarrow",
     "mcp",
@@ -45,6 +44,8 @@ dependencies = [
 dev = [
     "ruff",
     "pytest",
+]
+notebooks = [
     "ipykernel",
     "ipywidgets"
 ]

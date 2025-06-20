@@ -9,32 +9,21 @@ license = {file = "LICENSE"}
 # pip dependencies
 # install with `pip install -e .`
 dependencies = [
+    "aimu",
     "beautifulsoup4",
     "torch",
-    "huggingface_hub",
-    "transformers",
-    "accelerate",
-    "sentencepiece",
-    "ollama",
-    "aisuite",
     "pandas",
     "tinydb",
-    "openai",
-    "sqlalchemy",
     "tqdm",
-    "docstring-parser", # requied by aisuite
     "pandas",
     "numpy",
     "seaborn",
     "chromadb",
-    "sentence-transformers",
     "langchain-text-splitters",
     "streamlit",
     "scipy", # force version bump to latest to support numpy 2
     "pyarrow",
-    "mcp",
     "python-dotenv",
-    "fastmcp>=2",
     "nest_asyncio",
 ]
 

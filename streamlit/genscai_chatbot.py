@@ -1,9 +1,9 @@
-import streamlit as st
+from genscai import paths
 
 from aimu.models import HuggingFaceClient, OllamaClient
-from aimu.tools import search_research_articles
 from aimu.tools import MCPClient
 
+import streamlit as st
 import torch
 import json
 
@@ -22,13 +22,20 @@ MODEL_CLIENTS = [
     HuggingFaceClient,
 ]
 
-DEFAULT_TOOLS = [search_research_articles]
+MCP_SERVERS = {
+    "mcpServers": {
+        "genscai": {"command": "python", "args": [str(paths.package / "tools.py")]},
+        "gitmcp": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser"},
+    }
+}
 
 # Initialize the session state if we don't already have a model loaded
 if "model_client" not in st.session_state:
     st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
     st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
-    st.session_state.mcp_client = MCPClient()
+
+    st.session_state.mcp_client = MCPClient(MCP_SERVERS)
+    st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
 with st.sidebar:
     st.title("IDM Research Assistant")
@@ -48,6 +55,7 @@ with st.sidebar:
 
         st.session_state.model_id = model_client.TOOL_MODELS[0]
         st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()
     elif st.session_state.model_id != model_id:
@@ -55,6 +63,7 @@ with st.sidebar:
 
         st.session_state.model_id = model_id
         st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()
 

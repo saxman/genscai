@@ -25,7 +25,8 @@ MODEL_CLIENTS = [
 MCP_SERVERS = {
     "mcpServers": {
         "genscai": {"command": "python", "args": [str(paths.package / "tools.py")]},
-        "gitmcp": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser"},
+        "laser_core": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser"},
+        "laser_generic": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser-generic"},
     }
 }
 
@@ -48,8 +49,8 @@ with st.sidebar:
 
     model_client = st.selectbox("Model Client", options=MODEL_CLIENTS, format_func=lambda x: x.__name__)
 
-    # If the specified model client has changes, we need to create a new intsance of it reset to the first tool model
-    # Otherwise, if the specified model has changed, we need to create a new instance of the model client with the new model
+    # If the specified model client has changes, create a new intsance of it reset to the first tool model
+    # Otherwise, if the specified model has changed, create a new instance of the model client with the new model
     if not isinstance(st.session_state.model_client, model_client):
         del st.session_state.model_client
 
@@ -96,7 +97,6 @@ else:
             st.markdown(message["content"])
 
 if prompt := st.chat_input("What's up?"):
-    # Display user message in chat message container
     st.chat_message("user").markdown(prompt)
 
     message = {"role": "user", "content": prompt}

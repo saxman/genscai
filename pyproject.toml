@@ -9,7 +9,7 @@ license = {file = "LICENSE"}
 # pip dependencies
 # install with `pip install -e .`
 dependencies = [
-    "aimu",
+    "aimu[all]",
     "beautifulsoup4",
     "torch",
     "pandas",
@@ -58,3 +58,6 @@ target-version = "py39"
 pythonpath = [
   "."
 ]
+
+[tool.uv.sources]
+aimu = { path = "../aimu", editable = true }

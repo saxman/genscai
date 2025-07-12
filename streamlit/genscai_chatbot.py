@@ -17,6 +17,10 @@ Always provide links to the articles you reference.
 Please introduce yourself.
 """
 
+INITIAL_USER_MESSAGE = """
+Briefly greet the user and describe your capabilities.
+"""
+
 MODEL_CLIENTS = [
     OllamaClient,
     HuggingFaceClient,
@@ -33,7 +37,7 @@ MCP_SERVERS = {
 # Initialize the session state if we don't already have a model loaded
 if "model_client" not in st.session_state:
     st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
-    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
+    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id, system_message=SYSTEM_MESSAGE)
 
     st.session_state.mcp_client = MCPClient(MCP_SERVERS)
     st.session_state.model_client.mcp_client = st.session_state.mcp_client
@@ -55,7 +59,7 @@ with st.sidebar:
         del st.session_state.model_client
 
         st.session_state.model_id = model_client.TOOL_MODELS[0]
-        st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model_client = model_client(st.session_state.model_id, system_message=SYSTEM_MESSAGE)
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()
@@ -63,7 +67,7 @@ with st.sidebar:
         del st.session_state.model_client
 
         st.session_state.model_id = model_id
-        st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model_client = model_client(st.session_state.model_id, system_message=SYSTEM_MESSAGE)
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()
@@ -73,10 +77,8 @@ with st.sidebar:
 
 # Either generate and stream the system message response or display the chat message history
 if len(st.session_state.model_client.messages) == 0:
-    message = {"role": st.session_state.model_client.system_role, "content": SYSTEM_MESSAGE}
-
     streamed_response = st.session_state.model_client.chat_streamed(
-        message,
+        INITIAL_USER_MESSAGE,
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,
@@ -90,7 +92,7 @@ if len(st.session_state.model_client.messages) == 0:
 else:
     # Only render assistant and user messages (not tool messages) and not the system (first) message
     messages = [
-        x for x in st.session_state.model_client.messages[1:] if x["role"] in ["assistant", "user"] and "content" in x
+        x for x in st.session_state.model_client.messages[2:] if x["role"] in ["assistant", "user"] and "content" in x
     ]
     for message in messages:
         with st.chat_message(message["role"]):
@@ -99,10 +101,8 @@ else:
 if prompt := st.chat_input("What's up?"):
     st.chat_message("user").markdown(prompt)
 
-    message = {"role": "user", "content": prompt}
-
     streamed_response = st.session_state.model_client.chat_streamed(
-        message,
+        prompt,
         generate_kwargs={
             "temperature": temperature,
             "top_p": top_p,

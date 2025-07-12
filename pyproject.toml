@@ -19,12 +19,18 @@ dependencies = [
     "numpy",
     "seaborn",
     "chromadb",
+    "langchain",
     "langchain-text-splitters",
+    "langchain-experimental",
+    "langchain-community",
+    "langchain-ollama",
+    "json_repair", # indirect dependency of langchain-experimental
     "streamlit",
     "scipy", # force version bump to latest to support numpy 2
     "pyarrow",
     "python-dotenv",
     "nest_asyncio",
+    "watchdog>=6.0.0",
 ]
 
 # optional pip dependencies

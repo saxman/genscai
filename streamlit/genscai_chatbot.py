@@ -20,10 +20,11 @@ It is used to simulate the spread of infectious diseases and evaluate the impact
 You can use tools to explore LASER documentation, explore the LASER code, and answer questions about the frramework.
 
 Also use avialable tools to search for research articles, summarize them, and answer questions about their content.
-Alwasy provide links to the articles that you reference.
+Always provide links to the articles that you reference.
 """
 
-Please introduce yourself.
+INITIAL_USER_MESSAGE = """
+Please introduce yourself by describing your purpose and capabilities, including listing what tools you have access to.
 """
 
 MODEL_CLIENTS = [
@@ -45,8 +46,8 @@ MCP_SERVERS = {
 
 # Initialize the session state if we don't already have a model loaded. This only happens first run.
 if "model_client" not in st.session_state:
-    st.session_state.model_id = MODEL_CLIENTS[0].TOOL_MODELS[0]
-    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model_id)
+    st.session_state.model = MODEL_CLIENTS[0].TOOL_MODELS[0]
+    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
 
     st.session_state.mcp_client = MCPClient(MCP_SERVERS)
     st.session_state.model_client.mcp_client = st.session_state.mcp_client
@@ -58,7 +59,7 @@ if "model_client" not in st.session_state:
     st.session_state.model_client.messages = st.session_state.conversation_manager.messages
 
 with st.sidebar:
-    st.title("IDM Research Assistant")
+    st.title("IDM Modeling Research Assistant")
     st.write("Discuss infectious disease modeling with access to current disease modeling research.")
 
     model = st.selectbox("Model", options=st.session_state.model_client.TOOL_MODELS, format_func=lambda x: x.name)
@@ -72,16 +73,18 @@ with st.sidebar:
     if not isinstance(st.session_state.model_client, model_client):
         del st.session_state.model_client
 
-        st.session_state.model_id = model_client.TOOL_MODELS[0]
-        st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model = model_client.TOOL_MODELS[0]
+        st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
+
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()
     elif st.session_state.model != model:
         del st.session_state.model_client
 
-        st.session_state.model_id = model_id
-        st.session_state.model_client = model_client(st.session_state.model_id)
+        st.session_state.model = model
+        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE)
+
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
         st.rerun()

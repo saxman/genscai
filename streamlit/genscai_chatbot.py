@@ -47,7 +47,7 @@ MCP_SERVERS = {
 # Initialize the session state if we don't already have a model loaded. This only happens first run.
 if "model_client" not in st.session_state:
     st.session_state.model = MODEL_CLIENTS[0].TOOL_MODELS[0]
-    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
+    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE, model_keep_alive_seconds=60)
 
     st.session_state.mcp_client = MCPClient(MCP_SERVERS)
     st.session_state.model_client.mcp_client = st.session_state.mcp_client
@@ -74,7 +74,7 @@ with st.sidebar:
         del st.session_state.model_client
 
         st.session_state.model = model_client.TOOL_MODELS[0]
-        st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
+        st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE, model_keep_alive_seconds=60)
 
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 
@@ -83,7 +83,7 @@ with st.sidebar:
         del st.session_state.model_client
 
         st.session_state.model = model
-        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE)
+        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE, model_keep_alive_seconds=60)
 
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 

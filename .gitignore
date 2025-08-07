@@ -160,8 +160,5 @@ cython_debug/
 # transitent output files
 output/
 
-# uv
-uv.lock
-
 # VS Code
 .vscode/

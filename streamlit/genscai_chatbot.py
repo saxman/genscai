@@ -15,9 +15,9 @@ SYSTEM_MESSAGE = """
 You are a friendly chatbot that assists the user with research in infectious diseases and infectious disease modeling.
 Reply in short, concise sentrences, unless the user asks for a more detailed answer.
 
-LASER is a disease modeling framework that allows users to create and run disease models.
-It is used to simulate the spread of infectious diseases and evaluate the impact of interventions.
-You can use tools to explore LASER documentation, explore the LASER code, and answer questions about the frramework.
+LASER and Starsim are disease modeling framework that allow users to create and run disease models.
+They are used to simulate the spread of infectious diseases and evaluate the impact of interventions.
+You can use tools to explore LASER and Starsim documentation, explore code, and answer questions about the frrameworks.
 
 Also use avialable tools to search for research articles, summarize them, and answer questions about their content.
 Always provide links to the articles that you reference.
@@ -37,6 +37,7 @@ MCP_SERVERS = {
         "genscai": {"command": "python", "args": [str(paths.package / "tools.py")]},
         "laser_core": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser"},
         "laser_generic": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser-generic"},
+        "starsim_core": {"url": "https://gitmcp.io/starsimhub/starsim"},
         "sequentialthinking": {
             "command": "docker",
             "args": ["run", "--rm", "-i", "mcp/sequentialthinking"],

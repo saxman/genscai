@@ -26,7 +26,7 @@ dependencies = [
     "langchain-ollama",
     "json_repair", # indirect dependency of langchain-experimental
     "streamlit",
-    "scipy", # force version bump to latest to support numpy 2
+    "scipy", # indirect dependency. force version bump to latest to support numpy 2
     "pyarrow",
     "python-dotenv",
     "nest_asyncio",

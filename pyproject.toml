@@ -9,7 +9,6 @@ license = {file = "LICENSE"}
 dependencies = [
     "aimu[all]",
     "beautifulsoup4",
-    "torch",
     "pandas",
     "tinydb",
     "tqdm",
@@ -28,7 +27,7 @@ dependencies = [
     "pyarrow",
     "python-dotenv",
     "nest_asyncio",
-    "watchdog>=6.0.0",
+    "watchdog",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +41,11 @@ notebooks = [
 ]
 cuda = [
     "pynvml"
+]
+
+[tool.uv]
+override-dependencies = [
+    "triton; sys_platform == 'linux'",
 ]
 
 [build-system]

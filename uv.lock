@@ -8,6 +8,9 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
+[manifest]
+overrides = [{ name = "triton", marker = "sys_platform == 'linux'" }]
+
 [[package]]
 name = "accelerate"
 version = "1.10.1"
@@ -51,7 +54,7 @@ all = [
     { name = "sentencepiece" },
     { name = "torch" },
     { name = "transformers" },
-    { name = "triton" },
+    { name = "triton", marker = "sys_platform == 'linux'" },
 ]
 
 [package.metadata]
@@ -1219,7 +1222,6 @@ dependencies = [
     { name = "seaborn" },
     { name = "streamlit" },
     { name = "tinydb" },
-    { name = "torch" },
     { name = "tqdm" },
     { name = "watchdog" },
 ]
@@ -1262,9 +1264,8 @@ requires-dist = [
     { name = "seaborn" },
     { name = "streamlit" },
     { name = "tinydb" },
-    { name = "torch" },
     { name = "tqdm" },
-    { name = "watchdog", specifier = ">=6.0.0" },
+    { name = "watchdog" },
 ]
 provides-extras = ["dev", "notebooks", "cuda"]
 
@@ -5088,7 +5089,7 @@ dependencies = [
     { name = "nvidia-nvtx-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "setuptools", marker = "python_full_version >= '3.12'" },
     { name = "sympy" },
-    { name = "triton", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "triton", marker = "sys_platform == 'linux'" },
     { name = "typing-extensions" },
 ]
 wheels = [

@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv",
     "nest_asyncio",
     "watchdog",
+    "smolagents[toolkit]",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +41,7 @@ notebooks = [
     "ipywidgets"
 ]
 cuda = [
-    "pynvml"
+    "nvidia-ml-py"
 ]
 
 [build-system]

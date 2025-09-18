@@ -29,6 +29,7 @@ dependencies = [
     "nest_asyncio",
     "watchdog",
     "smolagents[toolkit]",
+    "litellm",
 ]
 
 [project.optional-dependencies]

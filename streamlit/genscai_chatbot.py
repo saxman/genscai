@@ -1,6 +1,6 @@
 from genscai import paths
 
-from aimu.models import HuggingFaceClient, OllamaClient
+from aimu.models import HuggingFaceClient, OllamaClient, AisuiteClient
 from aimu.tools import MCPClient
 from aimu.memory import ConversationManager
 
@@ -29,6 +29,7 @@ Please introduce yourself by describing your purpose and capabilities, including
 
 MODEL_CLIENTS = [
     OllamaClient,
+    AisuiteClient,
     HuggingFaceClient,
 ]
 

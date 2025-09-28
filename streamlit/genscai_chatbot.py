@@ -76,7 +76,7 @@ with st.sidebar:
         del st.session_state.model_client
 
         st.session_state.model = model_client.TOOL_MODELS[0]
-        st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
+        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE)
 
         st.session_state.model_client.mcp_client = st.session_state.mcp_client
 

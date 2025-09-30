@@ -30,6 +30,7 @@ dependencies = [
     "watchdog",
     "smolagents[toolkit]",
     "litellm",
+    "langextract",
 ]
 
 [project.optional-dependencies]

@@ -31,6 +31,7 @@ dependencies = [
     "smolagents[toolkit]",
     "litellm",
     "langextract",
+    "bitsandbytes",
 ]
 
 [project.optional-dependencies]

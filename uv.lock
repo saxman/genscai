@@ -392,6 +392,22 @@ wheels = [
 ]
 
 [[package]]
+name = "bitsandbytes"
+version = "0.48.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "packaging" },
+    { name = "torch" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/2c/9d5321cbb9efcfbca1333f6cd0d583a282c9b961fbefea0e586dbfc83cc5/bitsandbytes-0.48.0-py3-none-manylinux_2_24_aarch64.whl", hash = "sha256:a9cc5132d9e2a4052bd75352f500d9d69c62d25073a8412121571d82eb15f9cb", size = 34033939, upload-time = "2025-09-30T21:44:52.26Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/0d/0167669af89a1449daaabeccfbf6c8949be0c849b0bf98a6bd055b23ded1/bitsandbytes-0.48.0-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:9176c6d1c58a91c844c73cb969e483af3b705a057782d866b7c8a2a47127f796", size = 60089125, upload-time = "2025-09-30T21:44:56.647Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/a4/77c4aafcdf986754dd962aad16258b7493c6fb3ce1c69da4275df3cf3d3a/bitsandbytes-0.48.0-py3-none-win_amd64.whl", hash = "sha256:072cca7788410e00b551dc3017c538e400ed991d79be9b3a372ae099522c721c", size = 59523888, upload-time = "2025-09-30T21:45:00.451Z" },
+]
+
+[[package]]
 name = "blinker"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1408,6 +1424,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aimu", extra = ["all"] },
     { name = "beautifulsoup4" },
+    { name = "bitsandbytes" },
     { name = "chromadb" },
     { name = "json-repair" },
     { name = "langchain" },
@@ -1450,6 +1467,7 @@ notebooks = [
 requires-dist = [
     { name = "aimu", extras = ["all"], editable = "../aimu" },
     { name = "beautifulsoup4" },
+    { name = "bitsandbytes" },
     { name = "chromadb" },
     { name = "ipykernel", marker = "extra == 'notebooks'" },
     { name = "ipywidgets", marker = "extra == 'notebooks'" },

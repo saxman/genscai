@@ -39,10 +39,10 @@ MCP_SERVERS = {
         "laser_core": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser"},
         "laser_generic": {"url": "https://gitmcp.io/InstituteforDiseaseModeling/laser-generic"},
         "starsim_core": {"url": "https://gitmcp.io/starsimhub/starsim"},
-        "sequentialthinking": {
-            "command": "docker",
-            "args": ["run", "--rm", "-i", "mcp/sequentialthinking"],
-        },
+        # "sequentialthinking": {
+        #     "command": "docker",
+        #     "args": ["run", "--rm", "-i", "mcp/sequentialthinking"],
+        # },
     }
 }
 

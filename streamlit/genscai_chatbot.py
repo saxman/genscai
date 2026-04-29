@@ -1,8 +1,8 @@
 from genscai import paths
 
-from aimu.models import HuggingFaceClient, OllamaClient, AisuiteClient
+from aimu.models import AnthropicClient, HuggingFaceClient, OllamaClient, StreamPhase
 from aimu.tools import MCPClient
-from aimu.memory import ConversationManager
+from aimu.history import ConversationManager
 
 import streamlit as st
 import torch
@@ -29,7 +29,7 @@ Please introduce yourself by describing your purpose and capabilities, including
 
 MODEL_CLIENTS = [
     OllamaClient,
-    AisuiteClient,
+    AnthropicClient,
     HuggingFaceClient,
 ]
 
@@ -45,6 +45,37 @@ MCP_SERVERS = {
         # },
     }
 }
+
+
+def stream_chat_response(streamed_response):
+    """Render a stream of StreamChunk into the Streamlit UI."""
+    current_phase = None
+    current_box = None
+    current_text = ""
+
+    for chunk in streamed_response:
+        if chunk.phase == StreamPhase.TOOL_CALLING:
+            current_phase = None
+            with st.expander("🔧 Tool call"):
+                st.markdown(f"**Tool call:** {chunk.content['name']}")
+                st.markdown(f"**Tool response:** {chunk.content['response']}")
+            continue
+
+        if chunk.phase != current_phase:
+            current_phase = chunk.phase
+            current_text = ""
+            current_box = None
+
+        current_text += chunk.content
+        if current_text:
+            if current_box is None:
+                current_box = (
+                    st.expander("🤔 Thinking").empty()
+                    if chunk.phase == StreamPhase.THINKING
+                    else st.chat_message("assistant").empty()
+                )
+            current_box.markdown(current_text)
+
 
 # Initialize the session state if we don't already have a model loaded. This only happens first run.
 if "model_client" not in st.session_state:
@@ -98,21 +129,18 @@ with st.sidebar:
         st.session_state.clear()
         st.rerun()
 
+generate_kwargs = {
+    "temperature": temperature,
+    "top_p": top_p,
+    "max_new_tokens": 1024,
+    "repeat_penalty": repeat_penalty,
+}
+
 # Either generate and stream the initial user message response or display the chat message history.
 if len(st.session_state.model_client.messages) == 0:
-    streamed_response = st.session_state.model_client.chat_streamed(
-        INITIAL_USER_MESSAGE,
-        generate_kwargs={
-            "temperature": temperature,
-            "top_p": top_p,
-            "max_new_tokens": 1024,
-            "repeat_penalty": repeat_penalty,
-        },
+    stream_chat_response(
+        st.session_state.model_client.chat(INITIAL_USER_MESSAGE, generate_kwargs=generate_kwargs, stream=True)
     )
-
-    with st.chat_message("assistant"):
-        response = st.write_stream(streamed_response)
-
     st.session_state.conversation_manager.update_conversation(st.session_state.model_client.messages)
 else:
     # Only render assistant and user messages (not tool messages) and not the system message and initial user message.
@@ -125,20 +153,9 @@ else:
 
 if prompt := st.chat_input("What's up?"):
     st.chat_message("user").markdown(prompt)
-
-    streamed_response = st.session_state.model_client.chat_streamed(
-        prompt,
-        generate_kwargs={
-            "temperature": temperature,
-            "top_p": top_p,
-            "max_new_tokens": 1024,
-            "repeat_penalty": repeat_penalty,
-        },
+    stream_chat_response(
+        st.session_state.model_client.chat(prompt, generate_kwargs=generate_kwargs, stream=True)
     )
-
-    with st.chat_message("assistant"):
-        st.write_stream(streamed_response)
-
     st.session_state.conversation_manager.update_conversation(st.session_state.model_client.messages)
 
 # TODO: Determine better layout

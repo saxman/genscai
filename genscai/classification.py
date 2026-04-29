@@ -36,7 +36,7 @@ def classify_papers(
         paper = df_data.iloc[i]
         prompt = prompt_template.format(abstract=paper.abstract)
 
-        result = model_client.generate_text(prompt, generate_kwargs)
+        result = model_client.generate(prompt, generate_kwargs)
         logger.info(f"raw classificaiton results: {result}")
         result = result.split("</think>")[-1].strip()  # remove thinking output for reasoning models (DeepsSeek R1)
         logger.info(f"processed classification results: {result}")

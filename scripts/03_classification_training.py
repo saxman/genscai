@@ -1,7 +1,9 @@
 import logging
 
 from genscai import paths
-from aimu.models import HuggingFaceClient as ModelClient
+from aimu.models import HuggingFaceClient
+from aimu.models.hf.hf_client import HuggingFaceModel
+from aimu.prompts import Prompt, PromptCatalog
 from genscai.classification import (
     CLASSIFICATION_TASK_PROMPT_TEMPLATE,
     CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE,
@@ -9,14 +11,14 @@ from genscai.classification import (
     test_paper_classifications,
 )
 from genscai.data import load_classification_training_data
-from genscai import PromptCatalog, Prompt
 from genscai.training import MUTATION_POS_PROMPT_TEMPLATE, MUTATION_NEG_PROMPT_TEMPLATE, MUTATION_GENERATE_KWARGS
 import genscai.classification as gc
 
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-MODEL_ID = ModelClient.MODEL_DEEPSEEK_R1_8B
+MODEL = HuggingFaceModel.DEEPSEEK_R1_8B
+PROMPT_NAME = "classification"
 
 
 def run_training():
@@ -30,17 +32,17 @@ def run_training():
     """
 
     logging.basicConfig(filename="training.log", level=logging.INFO)
-    logger.info(f"started: {MODEL_ID}")
+    logger.info(f"started: {MODEL.value}")
 
     df_data = load_classification_training_data()
     df_data["predict_modeling"] = None
 
-    print(f"loading model: {MODEL_ID}", flush=True)
-    model_client = ModelClient(MODEL_ID)
+    print(f"loading model: {MODEL.value}", flush=True)
+    model_client = HuggingFaceClient(MODEL)
 
     generate_kwargs = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
     # for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens
-    if model_client.model_id == ModelClient.MODEL_DEEPSEEK_R1_8B:
+    if model_client.model is HuggingFaceModel.DEEPSEEK_R1_8B:
         generate_kwargs.update(
             {
                 "max_new_tokens": 1024,
@@ -49,10 +51,10 @@ def run_training():
         )
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
-    prompt = catalog.retrieve_last(MODEL_ID)
+    prompt = catalog.retrieve_last(PROMPT_NAME, MODEL.value)
 
     if prompt is None:
-        prompt = Prompt(prompt=CLASSIFICATION_TASK_PROMPT_TEMPLATE, model_id=MODEL_ID, version=1)
+        prompt = Prompt(name=PROMPT_NAME, prompt=CLASSIFICATION_TASK_PROMPT_TEMPLATE, model_id=MODEL.value, version=1)
         print("using default prompt template")
         logger.info(f"using default prompt template:\n{prompt.prompt}")
     else:
@@ -119,9 +121,9 @@ def run_training():
         catalog.store_prompt(prompt)
         last_prompt = prompt
 
-        prompt = Prompt(model_id=MODEL_ID, version=last_prompt.version + 1, prompt=mutated_prompt)
+        prompt = Prompt(name=PROMPT_NAME, model_id=MODEL.value, version=last_prompt.version + 1, prompt=mutated_prompt)
 
-    logger.debug(f"finished: {MODEL_ID}")
+    logger.debug(f"finished: {MODEL.value}")
 
 
 if __name__ == "__main__":

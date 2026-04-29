@@ -1,4 +1,5 @@
-from aimu.models import HuggingFaceClient as ModelClient
+from aimu.models import HuggingFaceClient
+from aimu.models.hf.hf_client import HuggingFaceModel
 import genscai.data as gd
 import genscai.classification as gc
 
@@ -8,7 +9,7 @@ def run_test():
     Evaluate how well a model classifies scientific papers as describing or referencing disease modeling techniques, or not, using test data.
     """
     df_data = gd.load_classification_training_data()
-    model_client = ModelClient(ModelClient.MODEL_DEEPSEEK_R1_8B)
+    model_client = HuggingFaceClient(HuggingFaceModel.DEEPSEEK_R1_8B)
     prompt_template = gc.CLASSIFICATION_TASK_PROMPT_TEMPLATE + gc.CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
 
     print(prompt_template)

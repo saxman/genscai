@@ -1,4 +1,5 @@
 from aimu.models import HuggingFaceClient
+from aimu.models.hf.hf_client import HuggingFaceModel
 from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data
@@ -26,17 +27,18 @@ Abstract:
 {abstract}
 """
 
-MODEL_ID = HuggingFaceClient.MODEL_LLAMA_3_1_8B
+MODEL = HuggingFaceModel.LLAMA_3_1_8B
+PROMPT_NAME = "classification"
 
 
 def run_classification():
     df_train, df_test, df_validate = load_midas_data()
     df = pd.concat([df_train, df_test, df_validate])
 
-    model_client = HuggingFaceClient(MODEL_ID, MODEL_KWARGS)
+    model_client = HuggingFaceClient(MODEL, MODEL_KWARGS)
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
-    prompt = catalog.retrieve_last(MODEL_ID)
+    prompt = catalog.retrieve_last(PROMPT_NAME, MODEL.value)
 
     df = classify_papers(
         model_client, prompt.prompt + "\n\n" + TASK_PROMPT_IO_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS, df

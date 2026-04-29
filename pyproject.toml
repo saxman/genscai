@@ -12,7 +12,6 @@ dependencies = [
     "pandas",
     "tinydb",
     "tqdm",
-    "pandas",
     "numpy",
     "seaborn",
     "chromadb",
@@ -57,7 +56,7 @@ include = ["genscai*"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 
 [tool.pytest.ini_options]
 pythonpath = [

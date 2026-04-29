@@ -153,9 +153,7 @@ else:
 
 if prompt := st.chat_input("What's up?"):
     st.chat_message("user").markdown(prompt)
-    stream_chat_response(
-        st.session_state.model_client.chat(prompt, generate_kwargs=generate_kwargs, stream=True)
-    )
+    stream_chat_response(st.session_state.model_client.chat(prompt, generate_kwargs=generate_kwargs, stream=True))
     st.session_state.conversation_manager.update_conversation(st.session_state.model_client.messages)
 
 # TODO: Determine better layout

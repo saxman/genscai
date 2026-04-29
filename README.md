@@ -108,7 +108,7 @@ pytest
 
 ## License
 
-Released under the terms of the [LICENSE](LICENSE) file in this repository.
+Released under the [Apache License 2.0](LICENSE).
 
 ## References
 

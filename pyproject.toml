@@ -63,6 +63,3 @@ target-version = "py39"
 pythonpath = [
   "."
 ]
-
-[tool.uv.sources]
-aimu = { path = "../aimu", editable = true }

@@ -90,6 +90,7 @@ Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup
 | 00 | [Environment Setup](notebooks/00%20-%20Environment%20Setup.ipynb) | — |
 | 01.1 | [Data Collection - Abstracts from MIDAS](notebooks/01.1%20-%20Data%20Collection%20-%20Abstracts%20from%20MIDAS.ipynb) | Data Collection |
 | 01.2 | [Data Collection - Articles from medRxiv and arXiv](notebooks/01.2%20-%20Data%20Collection%20-%20Articles%20from%20medRxiv%20and%20arXiv.ipynb) | Data Collection |
+| 01.3 | [Data Collection - Paperclip](notebooks/01.3%20-%20Data%20Collection%20-%20Paperclip.ipynb) | Data Collection |
 | 02.1 | [Information Extraction - OpenAI](notebooks/02.1%20-%20Information%20Extraction%20-%20OpenAI.ipynb) | Text Analysis |
 | 02.2 | [Information Extraction - LangChain](notebooks/02.2%20-%20Information%20Extraction%20-%20LangChain.ipynb) | Text Analysis |
 | 02.3 | [Information Extraction - LangExtract](notebooks/02.3%20-%20Information%20Extraction%20-%20LangExtract.ipynb) | Text Analysis |
@@ -108,6 +109,7 @@ Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup
 | 07.2 | [Model Optimization - Fine-Tuning](notebooks/07.2%20-%20Model%20Optimization%20-%20Fine-Tuning.ipynb) | Model Optimization |
 | 08.1 | [Agents - MCP Tools](notebooks/08.1%20-%20Agents%20-%20MCP%20Tools.ipynb) | Agents |
 | 08.2 | [Agents - smolagents](notebooks/08.2%20-%20Agents%20-%20smolagents.ipynb) | Agents |
+| 08.3 | [Agents - Paperclip](notebooks/08.3%20-%20Agents%20-%20Paperclip.ipynb) | Agents |
 
 ## Development
 

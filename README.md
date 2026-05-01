@@ -88,26 +88,26 @@ Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup
 | # | Title | Group |
 | --- | --- | --- |
 | 00 | [Environment Setup](notebooks/00%20-%20Environment%20Setup.ipynb) | — |
-| 01 | [Abstract Retrieval from MIDAS](notebooks/01%20-%20Abstract%20Retrieval%20from%20MIDAS.ipynb) | Data Collection |
-| 02 | [Article Download from medRxiv and arXiv](notebooks/02%20-%20Article%20Download%20from%20medRxiv%20and%20arXiv.ipynb) | Data Collection |
-| 03.1 | [Information Extraction - OpenAI](notebooks/03.1%20-%20Information%20Extraction%20-%20OpenAI.ipynb) | Text Analysis |
-| 03.2 | [Information Extraction - LangChain](notebooks/03.2%20-%20Information%20Extraction%20-%20LangChain.ipynb) | Text Analysis |
-| 03.3 | [Information Extraction - LangExtract](notebooks/03.3%20-%20Information%20Extraction%20-%20LangExtract.ipynb) | Text Analysis |
-| 04.1 | [Embeddings - Chroma](notebooks/04.1%20-%20Embeddings%20-%20Chroma.ipynb) | Text Analysis |
-| 04.2 | [Embeddings - SPECTER](notebooks/04.2%20-%20Embeddings%20-%20SPECTER.ipynb) | Text Analysis |
-| 04.3 | [Embeddings - SPECTER2](notebooks/04.3%20-%20Embeddings%20-%20SPECTER2.ipynb) | Text Analysis |
-| 04.4 | [Embeddings - NV-Embed](notebooks/04.4%20-%20Embeddings%20-%20NV-Embed.ipynb) | Text Analysis |
-| 05 | [Embedding Clustering and Visualization](notebooks/05%20-%20Embedding%20Clustering%20and%20Visualization.ipynb) | Text Analysis |
-| 06.1 | [Paper Classification with Open LLMs](notebooks/06.1%20-%20Paper%20Classification%20with%20Open%20LLMs.ipynb) | Text Analysis |
-| 06.2 | [Classification Prompt Evaluation](notebooks/06.2%20-%20Classification%20Prompt%20Evaluation.ipynb) | Text Analysis |
-| 07.1 | [Knowledge Graph - GraphRAG](notebooks/07.1%20-%20Knowledge%20Graph%20-%20GraphRAG.ipynb) | Knowledge & RAG |
-| 07.2 | [Knowledge Graph - LangChain](notebooks/07.2%20-%20Knowledge%20Graph%20-%20LangChain.ipynb) | Knowledge & RAG |
-| 08 | [Retrieval-Augmented Generation](notebooks/08%20-%20Retrieval-Augmented%20Generation.ipynb) | Knowledge & RAG |
-| 09 | [RAG Evaluation](notebooks/09%20-%20RAG%20Evaluation.ipynb) | Knowledge & RAG |
-| 10 | [Model Quantization with Hugging Face](notebooks/10%20-%20Model%20Quantization%20with%20Hugging%20Face.ipynb) | Local Models |
-| 11 | [Model Fine-Tuning with Hugging Face](notebooks/11%20-%20Model%20Fine-Tuning%20with%20Hugging%20Face.ipynb) | Local Models |
-| 12 | [Agentic Tools with MCP](notebooks/12%20-%20Agentic%20Tools%20with%20MCP.ipynb) | Agents |
-| 13 | [AI Agents with smolagents](notebooks/13%20-%20AI%20Agents%20with%20smolagents.ipynb) | Agents |
+| 01.1 | [Data Collection - Abstracts from MIDAS](notebooks/01.1%20-%20Data%20Collection%20-%20Abstracts%20from%20MIDAS.ipynb) | Data Collection |
+| 01.2 | [Data Collection - Articles from medRxiv and arXiv](notebooks/01.2%20-%20Data%20Collection%20-%20Articles%20from%20medRxiv%20and%20arXiv.ipynb) | Data Collection |
+| 02.1 | [Information Extraction - OpenAI](notebooks/02.1%20-%20Information%20Extraction%20-%20OpenAI.ipynb) | Text Analysis |
+| 02.2 | [Information Extraction - LangChain](notebooks/02.2%20-%20Information%20Extraction%20-%20LangChain.ipynb) | Text Analysis |
+| 02.3 | [Information Extraction - LangExtract](notebooks/02.3%20-%20Information%20Extraction%20-%20LangExtract.ipynb) | Text Analysis |
+| 03.1 | [Embeddings - Vector Search](notebooks/03.1%20-%20Embeddings%20-%20Vector%20Search.ipynb) | Text Analysis |
+| 03.2 | [Embeddings - SPECTER](notebooks/03.2%20-%20Embeddings%20-%20SPECTER.ipynb) | Text Analysis |
+| 03.3 | [Embeddings - SPECTER2](notebooks/03.3%20-%20Embeddings%20-%20SPECTER2.ipynb) | Text Analysis |
+| 03.4 | [Embeddings - NV-Embed](notebooks/03.4%20-%20Embeddings%20-%20NV-Embed.ipynb) | Text Analysis |
+| 03.5 | [Embeddings - Clustering and Visualization](notebooks/03.5%20-%20Embeddings%20-%20Clustering%20and%20Visualization.ipynb) | Text Analysis |
+| 04.1 | [Classification - Local LLMs](notebooks/04.1%20-%20Classification%20-%20Local%20LLMs.ipynb) | Text Analysis |
+| 04.2 | [Classification - Prompt Evaluation](notebooks/04.2%20-%20Classification%20-%20Prompt%20Evaluation.ipynb) | Text Analysis |
+| 05.1 | [Knowledge Graph - GraphRAG](notebooks/05.1%20-%20Knowledge%20Graph%20-%20GraphRAG.ipynb) | Knowledge & RAG |
+| 05.2 | [Knowledge Graph - LangChain](notebooks/05.2%20-%20Knowledge%20Graph%20-%20LangChain.ipynb) | Knowledge & RAG |
+| 06.1 | [RAG - Pipeline](notebooks/06.1%20-%20RAG%20-%20Pipeline.ipynb) | Knowledge & RAG |
+| 06.2 | [RAG - Evaluation](notebooks/06.2%20-%20RAG%20-%20Evaluation.ipynb) | Knowledge & RAG |
+| 07.1 | [Model Optimization - Quantization](notebooks/07.1%20-%20Model%20Optimization%20-%20Quantization.ipynb) | Model Optimization |
+| 07.2 | [Model Optimization - Fine-Tuning](notebooks/07.2%20-%20Model%20Optimization%20-%20Fine-Tuning.ipynb) | Model Optimization |
+| 08.1 | [Agents - MCP Tools](notebooks/08.1%20-%20Agents%20-%20MCP%20Tools.ipynb) | Agents |
+| 08.2 | [Agents - smolagents](notebooks/08.2%20-%20Agents%20-%20smolagents.ipynb) | Agents |
 
 ## Development
 

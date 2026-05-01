@@ -25,9 +25,9 @@ jupyter lab notebooks/
 
 ## Notebooks
 
-All 21 notebooks live flat in `notebooks/`, numbered 00–13 (with x.y sub-numbers for variant series). Groups by number range: 01–02 Data Collection, 03–06 Text Analysis, 07–09 Knowledge & RAG, 10–11 Local Models, 12–13 Agents.
+All 21 notebooks live flat in `notebooks/`, numbered 00–09 (with x.y sub-numbers for variant series). Groups by number range: 01 Data Collection, 02–04 Text Analysis, 05–06 Knowledge & RAG, 07 Model Optimization, 08 Agents.
 
-Notebooks 08 and 09 (RAG and RAG Evaluation) depend on `output/medrxiv.db` built by `scripts/07.2_medrxiv_knowledge_base.py`. Notebook 09 also requires `pip install ragas datasets`.
+Notebooks 06.1 and 06.2 (RAG and RAG Evaluation) depend on `output/medrxiv.db` built by `scripts/07.2_medrxiv_knowledge_base.py`. Notebook 06.2 also requires `pip install ragas datasets`.
 
 ## Architecture
 

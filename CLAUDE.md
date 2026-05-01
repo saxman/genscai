@@ -23,6 +23,12 @@ jupyter lab notebooks/
 
 `--all-extras` covers dev, notebooks, and CUDA groups. On Windows use `.venv\Scripts\activate`.
 
+## Notebooks
+
+All 21 notebooks live flat in `notebooks/`, numbered 00–13 (with x.y sub-numbers for variant series). Groups by number range: 01–02 Data Collection, 03–06 Text Analysis, 07–09 Knowledge & RAG, 10–11 Local Models, 12–13 Agents.
+
+Notebooks 08 and 09 (RAG and RAG Evaluation) depend on `output/medrxiv.db` built by `scripts/07.2_medrxiv_knowledge_base.py`. Notebook 09 also requires `pip install ragas datasets`.
+
 ## Architecture
 
 **GenScAI** is a research toolkit that pipelines literature into a searchable, agent-accessible knowledge base. The flow is:
@@ -31,7 +37,8 @@ jupyter lab notebooks/
 MIDAS website / medRxiv API
   → scripts/01 & 07.1  (scrape / download raw JSON + TinyDB)
   → scripts/03 & 05    (prompt optimization → paper classification → modeling_papers.json)
-  → scripts/07.2       (index into Chroma vector DB)
+  → scripts/07.2       (index into Chroma vector DB: output/medrxiv.db)
+  → notebooks/03 - Knowledge and RAG/  (knowledge graphs, RAG, RAG evaluation)
   → genscai/tools.py   (MCP server exposing search_research_articles)
   → streamlit chatbot  (multi-LLM UI wired to MCP tools)
 ```

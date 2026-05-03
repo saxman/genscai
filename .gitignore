@@ -162,3 +162,5 @@ output/
 
 # VS Code
 .vscode/
+
+.claude/

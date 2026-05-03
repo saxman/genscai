@@ -67,7 +67,7 @@ Open a notebook to explore a specific recipe:
 jupyter lab notebooks/
 ```
 
-Start with [00 - Setup.ipynb](notebooks/00%20-%20Setup.ipynb) and work through the numbered notebooks in order.
+Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup.ipynb), then open the group folders in `notebooks/` and work through them in numbered order.
 
 ## Project layout
 
@@ -83,19 +83,33 @@ genscai/
 
 ## Notebooks
 
-| Notebook | Topic |
-| --- | --- |
-| 00 | Environment setup |
-| 01 | Information retrieval |
-| 02.1 to 02.3 | Information extraction (OpenAI, LangChain, LangExtract) |
-| 03.1 to 03.4 | Embeddings (general, SPECTER, SPECTER2, NV-Embed) |
-| 04 | Clustering |
-| 05.1 to 05.2 | Classification and evaluation |
-| 06.1 to 06.2 | Knowledge graphs (GraphRAG, LangChain) |
-| 07 | Model Context Protocol (MCP) |
-| 08 | Model quantization with Hugging Face |
-| 09 | Agents with smolagents |
-| 99.1 | Article download utilities |
+Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup.ipynb) and work through the numbered notebooks in order.
+
+| # | Title | Group |
+| --- | --- | --- |
+| 00 | [Environment Setup](notebooks/00%20-%20Environment%20Setup.ipynb) | — |
+| 01.1 | [Data Collection - Abstracts from MIDAS](notebooks/01.1%20-%20Data%20Collection%20-%20Abstracts%20from%20MIDAS.ipynb) | Data Collection |
+| 01.2 | [Data Collection - Articles from medRxiv and arXiv](notebooks/01.2%20-%20Data%20Collection%20-%20Articles%20from%20medRxiv%20and%20arXiv.ipynb) | Data Collection |
+| 01.3 | [Data Collection - Paperclip](notebooks/01.3%20-%20Data%20Collection%20-%20Paperclip.ipynb) | Data Collection |
+| 02.1 | [Information Extraction - OpenAI](notebooks/02.1%20-%20Information%20Extraction%20-%20OpenAI.ipynb) | Text Analysis |
+| 02.2 | [Information Extraction - LangChain](notebooks/02.2%20-%20Information%20Extraction%20-%20LangChain.ipynb) | Text Analysis |
+| 02.3 | [Information Extraction - LangExtract](notebooks/02.3%20-%20Information%20Extraction%20-%20LangExtract.ipynb) | Text Analysis |
+| 03.1 | [Embeddings - Vector Search](notebooks/03.1%20-%20Embeddings%20-%20Vector%20Search.ipynb) | Text Analysis |
+| 03.2 | [Embeddings - SPECTER](notebooks/03.2%20-%20Embeddings%20-%20SPECTER.ipynb) | Text Analysis |
+| 03.3 | [Embeddings - SPECTER2](notebooks/03.3%20-%20Embeddings%20-%20SPECTER2.ipynb) | Text Analysis |
+| 03.4 | [Embeddings - NV-Embed](notebooks/03.4%20-%20Embeddings%20-%20NV-Embed.ipynb) | Text Analysis |
+| 03.5 | [Embeddings - Clustering and Visualization](notebooks/03.5%20-%20Embeddings%20-%20Clustering%20and%20Visualization.ipynb) | Text Analysis |
+| 04.1 | [Classification - Local LLMs](notebooks/04.1%20-%20Classification%20-%20Local%20LLMs.ipynb) | Text Analysis |
+| 04.2 | [Classification - Prompt Evaluation](notebooks/04.2%20-%20Classification%20-%20Prompt%20Evaluation.ipynb) | Text Analysis |
+| 05.1 | [Knowledge Graph - GraphRAG](notebooks/05.1%20-%20Knowledge%20Graph%20-%20GraphRAG.ipynb) | Knowledge & RAG |
+| 05.2 | [Knowledge Graph - LangChain](notebooks/05.2%20-%20Knowledge%20Graph%20-%20LangChain.ipynb) | Knowledge & RAG |
+| 06.1 | [RAG - Pipeline](notebooks/06.1%20-%20RAG%20-%20Pipeline.ipynb) | Knowledge & RAG |
+| 06.2 | [RAG - Evaluation](notebooks/06.2%20-%20RAG%20-%20Evaluation.ipynb) | Knowledge & RAG |
+| 07.1 | [Model Optimization - Quantization](notebooks/07.1%20-%20Model%20Optimization%20-%20Quantization.ipynb) | Model Optimization |
+| 07.2 | [Model Optimization - Fine-Tuning](notebooks/07.2%20-%20Model%20Optimization%20-%20Fine-Tuning.ipynb) | Model Optimization |
+| 08.1 | [Agents - MCP Tools](notebooks/08.1%20-%20Agents%20-%20MCP%20Tools.ipynb) | Agents |
+| 08.2 | [Agents - smolagents](notebooks/08.2%20-%20Agents%20-%20smolagents.ipynb) | Agents |
+| 08.3 | [Agents - Paperclip](notebooks/08.3%20-%20Agents%20-%20Paperclip.ipynb) | Agents |
 
 ## Development
 

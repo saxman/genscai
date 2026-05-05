@@ -44,7 +44,7 @@ wheels = [
 
 [[package]]
 name = "aimu"
-version = "0.3.1"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "chromadb" },
@@ -57,9 +57,9 @@ dependencies = [
     { name = "tinydb" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/95/b905b43170a8ab7139db89cacc969b63498bc00edd0235ff33ed7659036d/aimu-0.3.1.tar.gz", hash = "sha256:8faa026a815f998cb96ead8ec46c9551ca801243693d7a6d7014c9f79461748d", size = 112502, upload-time = "2026-05-04T07:42:51.413Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/48/2bb4d74baac309cdb3021576890dc75af4f6b8a7b79528d0e641d541d815/aimu-0.3.2.tar.gz", hash = "sha256:c18323cbfb8ab4560ac61e96d6d1276dbeada19a11185812f8ac5e0bedc24e3b", size = 112658, upload-time = "2026-05-05T19:34:23.647Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/f5/35abe55df4b9667157e4779edbc2fae6567675f2d6cbb525ffce562934c4/aimu-0.3.1-py3-none-any.whl", hash = "sha256:2ec95a080bc594c9056ccaf5a1f23874839045d18f73d6ab983b1ff7eb4b92cb", size = 105110, upload-time = "2026-05-04T07:42:52.806Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/be/c996a77a049c03211e4a1952ce369e02401e67764d0c6487af94d039ab26/aimu-0.3.2-py3-none-any.whl", hash = "sha256:30b6cd602df33ffb3b42bc1a2cc67837b3204963ee4ed9d11ddfd37308817877", size = 105222, upload-time = "2026-05-05T19:34:24.662Z" },
 ]
 
 [package.optional-dependencies]
@@ -1845,7 +1845,7 @@ notebooks = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aimu", extras = ["all"], specifier = ">=0.3.1" },
+    { name = "aimu", extras = ["all"], specifier = ">=0.3.2" },
     { name = "beautifulsoup4" },
     { name = "bitsandbytes" },
     { name = "chromadb" },

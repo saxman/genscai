@@ -1,7 +1,6 @@
 import pandas as pd
 
-from aimu.models import HuggingFaceClient
-from aimu.models.hf.hf_client import HuggingFaceModel
+from aimu.models import HuggingFaceClient, HuggingFaceModel
 from genscai.classification import CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS
 from genscai import paths
 from genscai.classification import classify_papers

@@ -1,5 +1,4 @@
-from aimu.models import HuggingFaceClient
-from aimu.models.hf.hf_client import HuggingFaceModel
+from aimu.models import HuggingFaceClient, HuggingFaceModel
 from genscai import paths
 from genscai.classification import classify_papers
 from genscai.data import load_midas_data

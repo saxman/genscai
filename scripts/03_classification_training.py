@@ -17,7 +17,7 @@ import genscai.classification as gc
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-MODEL = HuggingFaceModel.DEEPSEEK_R1_8B
+MODEL = HuggingFaceModel.QWEN_3_5_9B
 PROMPT_NAME = "classification"
 
 
@@ -41,14 +41,6 @@ def run_training():
     model_client = HuggingFaceClient(MODEL)
 
     generate_kwargs = gc.CLASSIFICATION_GENERATE_KWARGS.copy()
-    # for reasoning models (e.g. DeepSeek R1), increase temperature and max_new_tokens
-    if model_client.model is HuggingFaceModel.DEEPSEEK_R1_8B:
-        generate_kwargs.update(
-            {
-                "max_new_tokens": 1024,
-                "temperature": 0.70,
-            }
-        )
 
     catalog = PromptCatalog(paths.data / "prompt_catalog.db")
     prompt = catalog.retrieve_last(PROMPT_NAME, MODEL.value)

@@ -27,7 +27,7 @@ Abstract:
 {abstract}
 """
 
-MODEL = HuggingFaceModel.LLAMA_3_1_8B
+MODEL = HuggingFaceModel.QWEN_3_5_9B
 PROMPT_NAME = "classification"
 
 

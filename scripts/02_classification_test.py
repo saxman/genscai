@@ -9,7 +9,7 @@ def run_test():
     Evaluate how well a model classifies scientific papers as describing or referencing disease modeling techniques, or not, using test data.
     """
     df_data = gd.load_classification_training_data()
-    model_client = HuggingFaceClient(HuggingFaceModel.DEEPSEEK_R1_8B)
+    model_client = HuggingFaceClient(HuggingFaceModel.QWEN_3_5_9B)
     prompt_template = gc.CLASSIFICATION_TASK_PROMPT_TEMPLATE + gc.CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE
 
     print(prompt_template)

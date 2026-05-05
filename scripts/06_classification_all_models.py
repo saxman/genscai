@@ -8,12 +8,11 @@ from genscai.classification import classify_papers
 from genscai.data import load_midas_data
 from aimu.prompts import PromptCatalog
 
-# NOTE: GEMMA_2_9B is no longer in HuggingFaceModel; substituted GEMMA_3_12B.
 MODELS = [
-    HuggingFaceModel.LLAMA_3_1_8B,
+    HuggingFaceModel.QWEN_3_5_9B,
+    HuggingFaceModel.GEMMA_4_E4B,
+    HuggingFaceModel.QWEN_3_8B,
     HuggingFaceModel.GEMMA_3_12B,
-    HuggingFaceModel.PHI_4_14B,
-    HuggingFaceModel.MISTRAL_NEMO_12B,
 ]
 
 PROMPT_NAME = "classification"

@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 license = {file = "LICENSE"}
 
 dependencies = [
-    "aimu[all]>=0.3.0",
+    "aimu[all]>=0.3.1",
     "beautifulsoup4",
     "pandas",
     "tinydb",

@@ -62,3 +62,6 @@ target-version = "py311"
 pythonpath = [
   "."
 ]
+
+[tool.uv.sources]
+aimu = { path = "../aimu", editable = true }

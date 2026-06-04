@@ -1,5 +1,6 @@
 import pandas as pd
 
+from aimu import clear_hf_cache
 from aimu.models import HuggingFaceClient, HuggingFaceModel
 from genscai.classification import CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE, CLASSIFICATION_GENERATE_KWARGS
 from genscai import paths
@@ -42,6 +43,7 @@ def run_classification():
         df.to_json(paths.data / f"modeling_papers_{i}.json", orient="records", lines=True)
 
         del model_client
+        clear_hf_cache()
 
 
 if __name__ == "__main__":

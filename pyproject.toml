@@ -3,11 +3,11 @@ name = "genscai"
 version = "0.1.0"
 description = "Generative AI Tools and Recipes for Science and Research"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 
 dependencies = [
-    "aimu[all]>=0.3.2",
+    "aimu[all]>=0.6.0",
     "beautifulsoup4",
     "pandas",
     "tinydb",
@@ -56,7 +56,7 @@ include = ["genscai*"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.pytest.ini_options]
 pythonpath = [

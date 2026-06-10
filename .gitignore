@@ -164,3 +164,5 @@ output/
 .vscode/
 
 .claude/
+.deepeval/
+.ruff_cache/

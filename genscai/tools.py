@@ -1,11 +1,8 @@
-from genscai import paths
-
 from fastmcp import FastMCP
 
 import chromadb
 
-KNOWLEDGE_BASE_PATH = str(paths.output / "medrxiv.db")
-KNOWLEDGE_BASE_ID = "articles_cosign_chunked_256"
+from genscai.knowledge_base import DB_PATH as KNOWLEDGE_BASE_PATH, CHUNKED_COLLECTION as KNOWLEDGE_BASE_ID
 
 mcp = FastMCP("Genscai MCP Server")
 

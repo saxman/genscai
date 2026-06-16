@@ -61,57 +61,80 @@ Launch the example chatbot:
 streamlit run streamlit/genscai_chatbot.py
 ```
 
-Open a notebook to explore a specific recipe:
+Open the notebooks (each use-case folder has a `notebooks/` and/or `scripts/` subdir):
 
 ```bash
-jupyter lab notebooks/
+jupyter lab
 ```
 
-Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup.ipynb), then open the group folders in `notebooks/` and work through them in numbered order.
+New here? Start with [00 - getting started/notebooks/01 - Environment Setup.ipynb](00%20-%20getting%20started/notebooks/01%20-%20Environment%20Setup.ipynb).
 
 ## Project layout
 
+Each scientific use case is a top-level folder containing its own `notebooks/` and/or `scripts/`. The
+reusable Python package, datasets, generated artifacts, and tests are shared at the root.
+
 ```
 genscai/
-├── genscai/        Reusable Python package (retrieval, classification, training, tools)
-├── notebooks/      Numbered, runnable recipes covering retrieval through agents
-├── scripts/        Standalone scripts for batch retrieval, training, and classification
-├── streamlit/      Example Streamlit applications (e.g. the GenScAI chatbot)
-├── data/           Sample and training datasets (MIDAS abstracts, modeling papers)
+├── genscai/                   Reusable Python package (retrieval, classification, research, knowledge_base, simulation, tools)
+├── 00 - getting started/      Environment setup
+├── 01 - data collection/      Retrieve abstracts/articles (MIDAS, medRxiv, arXiv)
+├── 02 - text analysis/        Information extraction, embeddings, classification
+├── 03 - knowledge graphs/     Knowledge-graph construction and querying (GraphRAG, LangChain)
+├── 04 - semantic search/      medRxiv vector index + retrieval-augmented generation (RAG)
+├── 05 - model optimization/   Quantization and fine-tuning
+├── 06 - agents/               Agent + MCP tool demos
+├── 07 - literature research/  Agentic literature research across six frameworks
+├── 08 - disease simulation/   Compartmental-model intervention-planning agent
+├── 09 - evaluation/           Benchmarking
+├── streamlit/                 Example Streamlit applications (the GenScAI chatbot)
+├── data/                      Sample and training datasets
+├── output/                    Generated artifacts (vector DB, model weights)
+├── tests/                     Package tests
 └── pyproject.toml
 ```
 
-## Notebooks
+## Use cases
 
-Start with [00 - Environment Setup.ipynb](notebooks/00%20-%20Environment%20Setup.ipynb) and work through the numbered notebooks in order.
+Each top-level folder is a use case with its own README listing its notebooks and scripts.
 
-| # | Title | Group |
-| --- | --- | --- |
-| 00 | [Environment Setup](notebooks/00%20-%20Environment%20Setup.ipynb) | — |
-| 01.1 | [Data Collection - Abstracts from MIDAS](notebooks/01.1%20-%20Data%20Collection%20-%20Abstracts%20from%20MIDAS.ipynb) | Data Collection |
-| 01.2 | [Data Collection - Articles from medRxiv and arXiv](notebooks/01.2%20-%20Data%20Collection%20-%20Articles%20from%20medRxiv%20and%20arXiv.ipynb) | Data Collection |
-| 01.3 | [Data Collection - Paperclip](notebooks/01.3%20-%20Data%20Collection%20-%20Paperclip.ipynb) | Data Collection |
-| 02.1 | [Information Extraction - OpenAI](notebooks/02.1%20-%20Information%20Extraction%20-%20OpenAI.ipynb) | Text Analysis |
-| 02.2 | [Information Extraction - LangChain](notebooks/02.2%20-%20Information%20Extraction%20-%20LangChain.ipynb) | Text Analysis |
-| 02.3 | [Information Extraction - LangExtract](notebooks/02.3%20-%20Information%20Extraction%20-%20LangExtract.ipynb) | Text Analysis |
-| 03.1 | [Embeddings - Vector Search](notebooks/03.1%20-%20Embeddings%20-%20Vector%20Search.ipynb) | Text Analysis |
-| 03.2 | [Embeddings - SPECTER](notebooks/03.2%20-%20Embeddings%20-%20SPECTER.ipynb) | Text Analysis |
-| 03.3 | [Embeddings - SPECTER2](notebooks/03.3%20-%20Embeddings%20-%20SPECTER2.ipynb) | Text Analysis |
-| 03.4 | [Embeddings - NV-Embed](notebooks/03.4%20-%20Embeddings%20-%20NV-Embed.ipynb) | Text Analysis |
-| 03.5 | [Embeddings - Clustering and Visualization](notebooks/03.5%20-%20Embeddings%20-%20Clustering%20and%20Visualization.ipynb) | Text Analysis |
-| 04.1 | [Classification - Local LLMs](notebooks/04.1%20-%20Classification%20-%20Local%20LLMs.ipynb) | Text Analysis |
-| 04.2 | [Classification - Prompt Evaluation](notebooks/04.2%20-%20Classification%20-%20Prompt%20Evaluation.ipynb) | Text Analysis |
-| 05.1 | [Knowledge Graph - GraphRAG](notebooks/05.1%20-%20Knowledge%20Graph%20-%20GraphRAG.ipynb) | Knowledge & RAG |
-| 05.2 | [Knowledge Graph - LangChain](notebooks/05.2%20-%20Knowledge%20Graph%20-%20LangChain.ipynb) | Knowledge & RAG |
-| 06.1 | [RAG - Pipeline](notebooks/06.1%20-%20RAG%20-%20Pipeline.ipynb) | Knowledge & RAG |
-| 06.2 | [RAG - Evaluation](notebooks/06.2%20-%20RAG%20-%20Evaluation.ipynb) | Knowledge & RAG |
-| 07.1 | [Model Optimization - Quantization](notebooks/07.1%20-%20Model%20Optimization%20-%20Quantization.ipynb) | Model Optimization |
-| 07.2 | [Model Optimization - Fine-Tuning](notebooks/07.2%20-%20Model%20Optimization%20-%20Fine-Tuning.ipynb) | Model Optimization |
-| 08.1 | [Agents - MCP Tools](notebooks/08.1%20-%20Agents%20-%20MCP%20Tools.ipynb) | Agents |
-| 08.2 | [Agents - smolagents](notebooks/08.2%20-%20Agents%20-%20smolagents.ipynb) | Agents |
-| 08.3 | [Agents - Paperclip](notebooks/08.3%20-%20Agents%20-%20Paperclip.ipynb) | Agents |
-| 09.2 | [Agents - AIMU Workflows](notebooks/09.2%20-%20Agents%20-%20AIMU%20Workflows.ipynb) | Agents |
-| 10.1 | [Evaluation - AIMU Benchmark](notebooks/10.1%20-%20Evaluation%20-%20AIMU%20Benchmark.ipynb) | Evaluation |
+| Use case | What it covers |
+| --- | --- |
+| [00 - getting started](00%20-%20getting%20started/) | Environment setup |
+| [01 - data collection](01%20-%20data%20collection/) | Retrieve abstracts/articles (MIDAS, medRxiv, arXiv) |
+| [02 - text analysis](02%20-%20text%20analysis/) | Information extraction, embeddings, classification |
+| [03 - knowledge graphs](03%20-%20knowledge%20graphs/) | Knowledge-graph construction and querying (GraphRAG, LangChain) |
+| [04 - semantic search](04%20-%20semantic%20search/) | medRxiv vector index and retrieval-augmented generation (RAG) |
+| [05 - model optimization](05%20-%20model%20optimization/) | Quantization and fine-tuning |
+| [06 - agents](06%20-%20agents/) | Tool-using agents (MCP, smolagents, AIMU workflows) |
+| [07 - literature research](07%20-%20literature%20research/) | Agentic literature research across six frameworks |
+| [08 - disease simulation](08%20-%20disease%20simulation/) | Compartmental-model intervention-planning agent |
+| [09 - evaluation](09%20-%20evaluation/) | Benchmarking models and agent configurations |
+
+Within a folder, notebooks are numbered from `01` and meant to be worked through in order.
+
+### Literature research (agent frameworks)
+
+The [`07 - literature research/`](07%20-%20literature%20research/) folder implements one identical use case — agentic
+literature research over medRxiv/bioRxiv with a relevance-gated local document store and a critic
+feedback loop — across **six frameworks**, all on local Ollama models. Read them side by side to
+compare the frameworks. Requires `uv sync --all-extras`. See its
+[README](07%20-%20literature%20research/README.md).
+
+| # | Framework |
+| --- | --- |
+| 01 | [AIMU](07%20-%20literature%20research/notebooks/01%20-%20AIMU.ipynb) |
+| 02 | [smolagents](07%20-%20literature%20research/notebooks/02%20-%20smolagents.ipynb) |
+| 03 | [LangGraph](07%20-%20literature%20research/notebooks/03%20-%20LangGraph.ipynb) |
+| 04 | [PydanticAI](07%20-%20literature%20research/notebooks/04%20-%20PydanticAI.ipynb) |
+| 05 | [CrewAI](07%20-%20literature%20research/notebooks/05%20-%20CrewAI.ipynb) |
+| 06 | [LlamaIndex](07%20-%20literature%20research/notebooks/06%20-%20LlamaIndex.ipynb) |
+
+### Disease simulation
+
+The [`08 - disease simulation/`](08%20-%20disease%20simulation/) folder holds an adaptive intervention-planning agent
+([scripts/01_intervention_agent.py](08%20-%20disease%20simulation/scripts/01_intervention_agent.py)) that drives
+the compartmental model in `genscai/simulation.py`.
 
 ## Development
 

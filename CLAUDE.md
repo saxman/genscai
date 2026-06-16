@@ -18,18 +18,46 @@ pytest
 streamlit run streamlit/genscai_chatbot.py
 
 # Run notebooks
-jupyter lab notebooks/
+jupyter lab
 ```
 
 `--all-extras` covers dev, notebooks, and CUDA groups. On Windows use `.venv\Scripts\activate`.
 
-## Notebooks
+## Use-case folders
 
-All 25 notebooks live flat in `notebooks/`, numbered 00–10 (with x.y sub-numbers for variant series). Groups by number range: 01 Data Collection, 02–04 Text Analysis, 05–06 Knowledge & RAG, 07 Model Optimization, 08–09 Agents, 10 Evaluation.
+The project is organized into top-level **use-case folders**, each containing its own `notebooks/`
+and/or `scripts/` subdir. The shared package (`genscai/`), datasets (`data/`), generated artifacts
+(`output/`), and tests (`tests/`) live at the root and are imported/referenced from any folder via
+`genscai.paths` (anchored to the package, so notebooks/scripts run from any depth). Folders:
 
-Notebooks 06.1 and 06.2 (RAG and RAG Evaluation) depend on `output/medrxiv.db` built by `scripts/07.2_medrxiv_knowledge_base.py`. Notebook 06.2 also requires `pip install ragas datasets`.
+| Folder | Contents |
+|---|---|
+| `00 - getting started/` | notebook `01` (Environment Setup) |
+| `01 - data collection/` | notebooks `01`–`03`; script `01_retrieve_information.py` |
+| `02 - text analysis/` | notebooks `01`–`10` (information extraction, embeddings, classification); scripts `01`–`05`, `papers_json_to_csv.py` |
+| `03 - knowledge graphs/` | notebooks `01`, `02` (GraphRAG, LangChain) |
+| `04 - semantic search/` | notebooks `01`, `02` (RAG pipeline, RAG evaluation); scripts `01_medrxiv_download.py`, `02_medrxiv_knowledge_base.py` |
+| `05 - model optimization/` | notebooks `01`, `02` |
+| `06 - agents/` | notebooks `01`–`04`; script `01_agent.py` |
+| `07 - literature research/` | six framework notebooks (`01`–`06`) + `README.md` (see below) |
+| `08 - disease simulation/` | script `01_intervention_agent.py` (drives `genscai/simulation.py`) |
+| `09 - evaluation/` | notebook `01` (AIMU Benchmark) |
 
-Notebooks 09.2 (AIMU Workflows) and 10.1 (AIMU Benchmark) also depend on `output/medrxiv.db` because they wire the genscai MCP `search_research_articles` tool into agent and benchmark clients. 10.1 additionally needs `ANTHROPIC_API_KEY` set for the Anthropic client and the `LLMJudgeScorer` judge.
+Each folder is numbered (use-case names have no hyphens), has a `README.md`, and both its notebooks
+and scripts are renumbered from `01`. The medRxiv download/index logic lives in
+`genscai/knowledge_base.py`; the `04 - semantic search/` scripts are thin CLIs over it.
+
+`07 - literature research/` implements one identical use case — agentic literature research over
+medRxiv/bioRxiv with a relevance-gated local document store and a critic feedback loop — across six
+frameworks (AIMU, smolagents, LangGraph, PydanticAI, CrewAI, LlamaIndex), all on local Ollama models;
+the notebooks are meant to be compared, not sequenced. Shared search/fetch tools live in
+`genscai/research.py`; install with `uv sync --all-extras` (the `agents` extra). Default model
+`qwen3.6:27b`, overridable via `GENSCAI_AGENT_MODEL`. See `07 - literature research/README.md`.
+
+The RAG notebooks (`04 - semantic search/notebooks/01` Pipeline and `02` Evaluation) depend on `output/medrxiv.db` built by
+`04 - semantic search/scripts/02_medrxiv_knowledge_base.py` (or `genscai.knowledge_base.build_knowledge_base`). The RAG Evaluation notebook also requires `pip install ragas datasets`.
+
+`06 - agents/notebooks/04` (AIMU Workflows) and `09 - evaluation/notebooks/01` (AIMU Benchmark) also depend on `output/medrxiv.db` because they wire the genscai MCP `search_research_articles` tool into agent and benchmark clients. The benchmark additionally needs `ANTHROPIC_API_KEY` set for the Anthropic client and the `LLMJudgeScorer` judge.
 
 ## Architecture
 
@@ -37,41 +65,46 @@ Notebooks 09.2 (AIMU Workflows) and 10.1 (AIMU Benchmark) also depend on `output
 
 ```
 MIDAS website / medRxiv API
-  → scripts/01 & 07.1  (scrape / download raw JSON + TinyDB)
-  → scripts/03 & 05    (prompt optimization → paper classification → modeling_papers.json)
-  → scripts/07.2       (index into Chroma vector DB: output/medrxiv.db)
-  → notebooks/03 - Knowledge and RAG/  (knowledge graphs, RAG, RAG evaluation)
-  → genscai/tools.py   (MCP server exposing search_research_articles)
-  → streamlit chatbot  (multi-LLM UI wired to MCP tools)
+  → 01 - data collection/scripts/01 & 04 - semantic search/scripts/01  (scrape / download raw JSON + TinyDB)
+  → 02 - text analysis/scripts/02 & 04   (prompt optimization → paper classification → modeling_papers.json)
+  → 04 - semantic search/scripts/02      (index into Chroma vector DB: output/medrxiv.db; logic in genscai/knowledge_base.py)
+  → 03 - knowledge graphs/ & 04 - semantic search/notebooks/  (knowledge graphs, RAG, RAG evaluation)
+  → genscai/tools.py                     (MCP server exposing search_research_articles)
+  → streamlit chatbot                    (multi-LLM UI wired to MCP tools)
 ```
 
 ### `genscai/` package modules
 
 | Module | Role |
 |---|---|
-| `paths.py` | Single source of truth for `root`, `data`, `output`, `tests` paths |
+| `paths.py` | Single source of truth for `root`, `data`, `output`, `tests`, `package` paths |
 | `retrieval.py` | `MIDASRetriever` — scrapes midasnetwork.us, stores to TinyDB |
 | `medrxiv.py` | medRxiv REST API client (`retrieve_articles`) |
+| `knowledge_base.py` | Download medRxiv articles and build/index the Chroma knowledge base (used by `04 - semantic search/` scripts and `tools.py`) |
+| `research.py` | Live literature search/fetch via Europe PMC + arXiv (used by `07 - literature research/`) |
 | `classification.py` | LLM-based paper classifier; parses `[YES]`/`[NO]` responses; exports metrics |
 | `training.py` | Prompt mutation templates for hill-climbing prompt optimization |
+| `simulation.py` | Modular compartmental disease-modeling engine (used by `08 - disease simulation/`) |
 | `data.py` | Loaders for the labeled training set and MIDAS Hugging Face dataset |
 | `tools.py` | FastMCP server — exposes `search_research_articles` over the MCP protocol |
 | `utils.py` | `ReadOnlyTinyDB`, date extraction from paths, CUDA device info |
 
-### Scripts pipeline (`scripts/`)
+### Scripts pipeline
 
-Scripts are numbered to reflect execution order:
+Scripts are renumbered from `01` within each use-case folder's `scripts/` subdir (listed here in
+overall execution order):
 
-- **01** — Retrieve MIDAS abstracts; deduplicate; split 70/15/15 into train/test/validate CSVs
-- **02** — Spot-check classification quality against labeled data
-- **03** — Auto-tune classification prompts via hill-climbing mutation; saves best prompts to `data/prompt_catalog.db` (TinyDB)
-- **04** — Cross-model validation: test prompts tuned on one model against others
-- **05** — Classify all MIDAS papers; output `data/modeling_papers.json`
-- **06** — Same classification across multiple open models in parallel
-- **07.1** — Download medRxiv papers for 2019–2024 to `output/medrxiv_{year}.json`
-- **07.2** — Index medRxiv abstracts into Chroma (`output/medrxiv.db`); creates two collections: full abstracts and 256-char chunked with 50-char overlap
-- **08** — Minimal smolagents example (web search agent)
-- `papers_json_to_csv.py` — Convert classification results to modeling/non-modeling CSVs
+- `01 - data collection/scripts/01_retrieve_information.py` — Retrieve MIDAS abstracts; deduplicate; split 70/15/15 into train/test/validate CSVs
+- `02 - text analysis/scripts/01_classification_test.py` — Spot-check classification quality against labeled data
+- `02 - text analysis/scripts/02_classification_training.py` — Auto-tune classification prompts via hill-climbing mutation; saves best prompts to `data/prompt_catalog.db` (TinyDB)
+- `02 - text analysis/scripts/03_classification_cross_model_validation.py` — Cross-model validation: test prompts tuned on one model against others
+- `02 - text analysis/scripts/04_classification.py` — Classify all MIDAS papers; output `data/modeling_papers.json`
+- `02 - text analysis/scripts/05_classification_all_models.py` — Same classification across multiple open models in parallel
+- `02 - text analysis/scripts/papers_json_to_csv.py` — Convert classification results to modeling/non-modeling CSVs
+- `04 - semantic search/scripts/01_medrxiv_download.py` — Download medRxiv papers for 2019–2024 to `output/medrxiv_{year}.json` (thin CLI over `genscai.knowledge_base`)
+- `04 - semantic search/scripts/02_medrxiv_knowledge_base.py` — Index medRxiv abstracts into Chroma (`output/medrxiv.db`), 256-char chunks with 50-char overlap (thin CLI over `genscai.knowledge_base`)
+- `06 - agents/scripts/01_agent.py` — Minimal smolagents example (web search agent)
+- `08 - disease simulation/scripts/01_intervention_agent.py` — Adaptive intervention-planning agent over `genscai/simulation.py`
 
 ### LLM abstraction
 
@@ -84,7 +117,7 @@ All LLM calls go through **`aimu`** (a thin unified client over Ollama, HuggingF
 - `CLASSIFICATION_OUTPUT_PROMPT_TEMPLATE` — enforces `[YES]`/`[NO]` output format
 - Generation kwargs default to `max_new_tokens=3, temperature=0.01` for deterministic classification
 
-`training.py` adds mutation templates for positive/negative examples used during prompt hill-climbing in `scripts/03`.
+`training.py` adds mutation templates for positive/negative examples used during prompt hill-climbing in `02 - text analysis/scripts/02_classification_training.py`.
 
 ### Streamlit chatbot
 

@@ -40,10 +40,25 @@ dev = [
 ]
 notebooks = [
     "ipykernel",
-    "ipywidgets"
+    "ipywidgets",
+    "nbformat",
+    "nbconvert"
 ]
 cuda = [
     "nvidia-ml-py"
+]
+# Agent frameworks compared in notebooks/agent-frameworks/. aimu, smolagents, langchain,
+# langchain-ollama, and chromadb are already core dependencies.
+agents = [
+    "langgraph",
+    "langchain-chroma",
+    "pydantic-ai-slim[openai]",
+    "crewai",
+    "crewai-tools",
+    "arxiv",
+    "llama-index",
+    "llama-index-llms-ollama",
+    "llama-index-embeddings-ollama",
 ]
 
 [build-system]

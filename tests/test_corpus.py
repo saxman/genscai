@@ -46,7 +46,9 @@ ARTICLE_B = {
 
 
 def make_corpus(results=None, store=None):
-    return Corpus(search_fn=lambda q: results if results is not None else [ARTICLE_A, ARTICLE_B], store=store or StubStore())
+    return Corpus(
+        search_fn=lambda q: results if results is not None else [ARTICLE_A, ARTICLE_B], store=store or StubStore()
+    )
 
 
 def tools_of(corpus):

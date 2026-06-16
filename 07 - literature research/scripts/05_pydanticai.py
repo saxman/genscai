@@ -76,9 +76,9 @@ for round_num in range(shared.MAX_ROUNDS):
     print(f"--- critic (round {round_num + 1}): {verdict[:120]}")
     if "PASS" in verdict:
         break
-    synthesis = asyncio.run(researcher.run(
-        f"Revise your synthesis using this feedback:\n{verdict}\n\nQuestion: {shared.RESEARCH_QUESTION}"
-    )).output
+    synthesis = asyncio.run(
+        researcher.run(f"Revise your synthesis using this feedback:\n{verdict}\n\nQuestion: {shared.RESEARCH_QUESTION}")
+    ).output
 
 print("\n=== FINAL SYNTHESIS ===\n")
 print(synthesis)

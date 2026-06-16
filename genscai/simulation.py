@@ -251,7 +251,9 @@ class Simulation:
 
     # -- interventions -------------------------------------------------------------------
 
-    def apply_intervention(self, kind: str, magnitude: float, start_day: float, end_day: Optional[float] = None) -> None:
+    def apply_intervention(
+        self, kind: str, magnitude: float, start_day: float, end_day: Optional[float] = None
+    ) -> None:
         if kind not in INTERVENTION_KINDS:
             raise ValueError(f"unknown intervention kind '{kind}'; expected one of {INTERVENTION_KINDS}")
         self.interventions.append(Intervention(kind, magnitude, start_day, end_day))
@@ -490,9 +492,7 @@ class Simulation:
             clone.advance(days)
         return clone
 
-    def calibrate_r0(
-        self, observed_days: list, observed_cumulative: list, low: float = 0.3, high: float = 8.0
-    ) -> dict:
+    def calibrate_r0(self, observed_days: list, observed_cumulative: list, low: float = 0.3, high: float = 8.0) -> dict:
         """Fit ``r0`` to observed cumulative-incidence data, holding other parameters fixed.
 
         Returns ``{"r0": fitted, "sse": residual_sum_of_squares}``. Grounds the transmission

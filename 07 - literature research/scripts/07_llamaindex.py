@@ -37,7 +37,12 @@ def save_relevant_paper(doi: str) -> str:
     index.insert(
         Document(
             text=f"{article['title']}\n\n{article['abstract']}",
-            metadata={"doi": doi, "title": article["title"], "date": article["date"] or "", "url": article["url"] or ""},
+            metadata={
+                "doi": doi,
+                "title": article["title"],
+                "date": article["date"] or "",
+                "url": article["url"] or "",
+            },
             doc_id=doi,
         )
     )
@@ -71,9 +76,7 @@ class ResearchWorkflow(Workflow):
     async def research(self, ev: StartEvent) -> SynthesizeEvent:
         # ReActAgent uses text-based ReAct prompting, which works with local Ollama models that
         # lack reliable native tool-calling (FunctionAgent's tool schema trips some model templates).
-        agent = ReActAgent(
-            tools=[search_preprints, save_relevant_paper], llm=llm, system_prompt=RESEARCHER_SYSTEM
-        )
+        agent = ReActAgent(tools=[search_preprints, save_relevant_paper], llm=llm, system_prompt=RESEARCHER_SYSTEM)
         # A local model may keep looping past a sensible stopping point and exhaust the agent's step
         # budget; the relevant papers are already saved to the index, so we proceed to synthesis either way.
         try:

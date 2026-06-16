@@ -134,8 +134,7 @@ def _format_metrics(metrics: dict) -> str:
         f"({metrics['peak_infectious'] / population:.1%} of population) on day {metrics['peak_day']:.0f}",
         f"peak hospitalized: {metrics['peak_hospitalized']:,.0f} on day {metrics['peak_hospital_day']:.0f} "
         f"(capacity {capacity:,.0f}; days over capacity: {metrics['days_over_capacity']})",
-        f"cumulative infections: {metrics['cumulative_infections']:,.0f} "
-        f"(attack rate {metrics['attack_rate']:.1%})",
+        f"cumulative infections: {metrics['cumulative_infections']:,.0f} (attack rate {metrics['attack_rate']:.1%})",
         f"cumulative deaths: {metrics['cumulative_deaths']:,.0f}",
     ]
     if metrics.get("r_effective") is not None:
@@ -320,7 +319,9 @@ def get_metrics() -> str:
 
 
 @aimu.tool
-def optimize_intervention(kind: str, metric: str, threshold: float, days: float, low: float = 0.0, high: float = 1.0) -> str:
+def optimize_intervention(
+    kind: str, metric: str, threshold: float, days: float, low: float = 0.0, high: float = 1.0
+) -> str:
     """Find the smallest magnitude of a single ongoing intervention that keeps a metric within a target.
 
     Searches for the minimal magnitude of `kind` (applied alone, from day 0) such that `metric`

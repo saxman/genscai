@@ -46,6 +46,7 @@ def _get_with_retries(url, params):
                 time.sleep(_RETRY_BACKOFF_SECONDS * (attempt + 1))
     raise last_error
 
+
 # The comparison series targets recent preprints; callers can override the window or pass None.
 DEFAULT_START_DATE = "2024-01-01"
 DEFAULT_END_DATE = "2025-12-31"

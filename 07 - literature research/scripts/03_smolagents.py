@@ -49,7 +49,14 @@ def save_relevant_paper(doi: str) -> str:
     collection.upsert(
         ids=[doi],
         documents=[document],
-        metadatas=[{"title": article["title"], "authors": article["authors"] or "", "date": article["date"] or "", "url": article["url"] or ""}],
+        metadatas=[
+            {
+                "title": article["title"],
+                "authors": article["authors"] or "",
+                "date": article["date"] or "",
+                "url": article["url"] or "",
+            }
+        ],
     )
     return f"Saved: {article['title']}"
 
@@ -89,7 +96,9 @@ for round_num in range(shared.MAX_ROUNDS):
     print(f"--- critic (round {round_num + 1}): {feedback[:120]}")
     if "PASS" in feedback:
         break
-    synthesis = agent.run(f"Revise your synthesis using this feedback:\n{feedback}\n\nQuestion: {shared.RESEARCH_QUESTION}")
+    synthesis = agent.run(
+        f"Revise your synthesis using this feedback:\n{feedback}\n\nQuestion: {shared.RESEARCH_QUESTION}"
+    )
 
 print("\n=== FINAL SYNTHESIS ===\n")
 print(synthesis)

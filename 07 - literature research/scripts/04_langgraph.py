@@ -94,7 +94,10 @@ def research_node(state: State) -> dict:
 
 def evaluate_node(state: State) -> dict:
     feedback = model.invoke(
-        [("system", shared.CRITIC_SYSTEM), ("user", f"Question: {state['question']}\n\nSynthesis:\n{state['synthesis']}")]
+        [
+            ("system", shared.CRITIC_SYSTEM),
+            ("user", f"Question: {state['question']}\n\nSynthesis:\n{state['synthesis']}"),
+        ]
     ).content
     print(f"--- critic (round {state['rounds']}): {feedback[:120]}")
     return {"feedback": feedback}

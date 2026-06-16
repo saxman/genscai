@@ -97,5 +97,7 @@ def build_knowledge_base(years, *, chunked: bool = True, db_path: str = DB_PATH,
     for year in years:
         with open(source_dir / f"medrxiv_{year}.json") as fin:
             articles = json.load(fin)
-        count = store_article_chunks(articles, db_path=db_path) if chunked else store_articles(articles, db_path=db_path)
+        count = (
+            store_article_chunks(articles, db_path=db_path) if chunked else store_articles(articles, db_path=db_path)
+        )
     return count

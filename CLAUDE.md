@@ -39,7 +39,7 @@ and/or `scripts/` subdir. The shared package (`genscai/`), datasets (`data/`), g
 | `04 - semantic search/` | notebooks `01`, `02` (RAG pipeline, RAG evaluation); scripts `01_medrxiv_download.py`, `02_medrxiv_knowledge_base.py` |
 | `05 - model optimization/` | notebooks `01`, `02` |
 | `06 - agents/` | notebooks `01`–`04`; script `01_agent.py` |
-| `07 - literature research/` | six framework notebooks (`01`–`06`) + `README.md` (see below) |
+| `07 - literature research/` | notebooks `01`–`07` (AIMU, genscai-corpus, then five frameworks) + `README.md` (see below) |
 | `08 - disease simulation/` | script `01_intervention_agent.py` (drives `genscai/simulation.py`) |
 | `09 - evaluation/` | notebook `01` (AIMU Benchmark) |
 
@@ -48,11 +48,18 @@ and scripts are renumbered from `01`. The medRxiv download/index logic lives in
 `genscai/knowledge_base.py`; the `04 - semantic search/` scripts are thin CLIs over it.
 
 `07 - literature research/` implements one identical use case — agentic literature research over
-medRxiv/bioRxiv with a relevance-gated local document store and a critic feedback loop — across six
-frameworks (AIMU, smolagents, LangGraph, PydanticAI, CrewAI, LlamaIndex), all on local Ollama models;
-the notebooks are meant to be compared, not sequenced. Shared search/fetch tools live in
-`genscai/research.py`; install with `uv sync --all-extras` (the `literature_research` extra). Default model
-`qwen3.6:27b`, overridable via `GENSCAI_AGENT_MODEL`. See `07 - literature research/README.md`.
+medRxiv/bioRxiv with a relevance-gated local document store and a critic feedback loop — six ways
+across frameworks (`01` AIMU, `03` smolagents, `04` LangGraph, `05` PydanticAI, `06` CrewAI, `07`
+LlamaIndex) plus `02` genscai, a "batteries-included" build on the project's own
+`genscai.corpus.Corpus` helper (layered on AIMU). All run on local Ollama models; the notebooks are
+meant to be compared, not sequenced (each script is a runnable counterpart). Shared search/fetch
+tools live in `genscai/research.py`; install with `uv sync --all-extras` (the `literature_research`
+extra). Default model `qwen3.6:27b`, overridable via `GENSCAI_AGENT_MODEL`. See
+`07 - literature research/README.md`.
+
+`02 - genscai` exercises AIMU capabilities added for this use case: `ToolContext` dependency
+injection (tools reach shared state without globals), `EvaluatorOptimizer(verdict_schema=...)` (a
+typed critic verdict), and `aimu.pretty_print`. `01 - AIMU` uses the same three directly, by hand.
 
 The RAG notebooks (`04 - semantic search/notebooks/01` Pipeline and `02` Evaluation) depend on `output/medrxiv.db` built by
 `04 - semantic search/scripts/02_medrxiv_knowledge_base.py` (or `genscai.knowledge_base.build_knowledge_base`). The RAG Evaluation notebook also requires `pip install ragas datasets`.
@@ -82,6 +89,7 @@ MIDAS website / medRxiv API
 | `medrxiv.py` | medRxiv REST API client (`retrieve_articles`) |
 | `knowledge_base.py` | Download medRxiv articles and build/index the Chroma knowledge base (used by `04 - semantic search/` scripts and `tools.py`) |
 | `research.py` | Live literature search/fetch via Europe PMC + arXiv (used by `07 - literature research/`) |
+| `corpus.py` | `Corpus` — relevance-gated research corpus exposing search/save/read as AIMU agent tools over a `SemanticMemoryStore` (used by `07 - literature research/` notebook/script `02`) |
 | `classification.py` | LLM-based paper classifier; parses `[YES]`/`[NO]` responses; exports metrics |
 | `training.py` | Prompt mutation templates for hill-climbing prompt optimization |
 | `simulation.py` | Modular compartmental disease-modeling engine (used by `08 - disease simulation/`) |

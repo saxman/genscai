@@ -1,61 +1,35 @@
-"""Script form of the "05 - CrewAI" notebook (see ../notebooks/).
+"""Script form of the "06 - CrewAI" notebook (see ../notebooks/).
 
 The same agentic literature-research workflow as the other notebooks in this folder, implemented with CrewAI, captured as a runnable script. Requires a local Ollama server (see the folder README).
 """
 
 import asyncio
 
-import os
-
-import dotenv
-
 import chromadb
 from chromadb.utils import embedding_functions
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import tool
 
-from genscai import research, paths
+from genscai import paths
 
-dotenv.load_dotenv(paths.root / ".env")
+import shared
 
-OLLAMA_URL = "http://localhost:11434"
-MODEL = os.environ.get("GENSCAI_AGENT_MODEL", "qwen3.6:27b")
-MAX_ROUNDS = 2
+llm = LLM(model=f"ollama/{shared.agent_model()}", base_url=shared.OLLAMA_URL)
 
-RESEARCH_QUESTION = (
-    "What interventions and control strategies have recent preprints proposed or evaluated for "
-    "dengue outbreaks, and what evidence do they report?"
-)
+shared.print_search_preview()
 
-llm = LLM(model=f"ollama/{MODEL}", base_url=OLLAMA_URL)
-
-for h in research.search_medrxiv("dengue vaccination", max_results=3):
-    print(h["date"], "-", h["title"][:80])
-
-ef = embedding_functions.OllamaEmbeddingFunction(url=OLLAMA_URL, model_name="nomic-embed-text")
+ef = embedding_functions.OllamaEmbeddingFunction(url=shared.OLLAMA_URL, model_name="nomic-embed-text")
 chroma = chromadb.PersistentClient(path=str(paths.output / "agent_frameworks" / "crewai_store"))
 collection = chroma.get_or_create_collection("papers", embedding_function=ef)
 
+# Cache of search hits so a paper can be saved by DOI alone.
 _seen: dict[str, dict] = {}
 
 
 @tool("search_preprints")
 def search_preprints(query: str) -> str:
     """Search medRxiv and bioRxiv preprints for a topic. Always include the key term (e.g. 'dengue')."""
-    try:
-        results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
-    except Exception as exc:
-        return f"Search temporarily unavailable ({exc}). Try again shortly or rephrase the query."
-    if not results:
-        return "No results found."
-    blocks = []
-    for article in results:
-        _seen[article["doi"]] = article
-        blocks.append(
-            f"DOI: {article['doi']}\nTitle: {article['title']}\nDate: {article['date']}\n"
-            f"Abstract: {(article['abstract'] or '')[:600]}"
-        )
-    return "\n\n".join(blocks)
+    return shared.search_preprints(query, _seen)
 
 
 @tool("save_relevant_paper")
@@ -78,10 +52,12 @@ def read_saved_papers() -> str:
     data = collection.get()
     if not data["ids"]:
         return "No papers saved yet."
-    blocks = []
-    for doi, meta, doc in zip(data["ids"], data["metadatas"], data["documents"]):
-        blocks.append(f"# {meta['title']}\nDOI: {doi} | Date: {meta['date']}\nURL: {meta['url']}\n\n{doc}")
+    blocks = [
+        shared.format_saved_paper(meta["title"], doi, meta["date"], meta["url"], doc)
+        for doi, meta, doc in zip(data["ids"], data["metadatas"], data["documents"])
+    ]
     return "\n\n---\n\n".join(blocks)
+
 
 researcher = Agent(
     role="Preprint researcher",
@@ -105,7 +81,7 @@ writer = Agent(
 def build_crew(writer_instruction):
     research_task = Task(
         description=(
-            f"Research question: {RESEARCH_QUESTION}\n"
+            f"Research question: {shared.RESEARCH_QUESTION}\n"
             "Search preprints (always include 'dengue' in queries). For each candidate, if its abstract "
             "is plausibly relevant, save it with save_relevant_paper. Save several relevant papers."
         ),
@@ -141,11 +117,7 @@ critic = Agent(
 
 async def critique(synthesis):
     task = Task(
-        description=(
-            "Reply with exactly PASS if this synthesis answers the question, cites specific papers "
-            f"(title + DOI), and reports evidence. Otherwise reply REVISE: <specific gap>.\n\n"
-            f"Question: {RESEARCH_QUESTION}\n\nSynthesis:\n{synthesis}"
-        ),
+        description=f"{shared.CRITIC_SYSTEM}\n\nQuestion: {shared.RESEARCH_QUESTION}\n\nSynthesis:\n{synthesis}",
         expected_output="PASS or REVISE: <gap>",
         agent=critic,
     )
@@ -153,21 +125,18 @@ async def critique(synthesis):
     return result.raw
 
 
-for round_num in range(MAX_ROUNDS):
+for round_num in range(shared.MAX_ROUNDS):
     verdict = asyncio.run(critique(synthesis))
     print(f"--- critic (round {round_num + 1}): {verdict[:120]}")
     if "PASS" in verdict:
         break
     revise_crew = build_crew(
         f"Revise the synthesis using this feedback: {verdict}. Call read_saved_papers and answer the "
-        f"question ({RESEARCH_QUESTION}) using only the saved papers, citing each by title and DOI."
+        f"question ({shared.RESEARCH_QUESTION}) using only the saved papers, citing each by title and DOI."
     )
     synthesis = asyncio.run(revise_crew.kickoff_async()).raw
 
 print("\n=== FINAL SYNTHESIS ===\n")
 print(synthesis)
 
-data = collection.get()
-print(f"{len(data['ids'])} papers saved:")
-for meta in data["metadatas"]:
-    print(" -", meta["title"][:80])
+shared.print_saved_summary([meta["title"] for meta in collection.get()["metadatas"]])

@@ -17,6 +17,7 @@ GenScAI is a hands-on toolkit for applying large language models to scientific w
 - **Document classification** with training, evaluation, and cross-model validation pipelines.
 - **Knowledge graph construction** via GraphRAG and LangChain.
 - **Agents and tools** built on `smolagents` and the Model Context Protocol (MCP).
+- **Relevance-gated research corpus** ([`genscai.corpus.Corpus`](genscai/corpus.py)): search → relevance-gate → persist → read as ready-made AIMU agent tools over a vector store.
 - **Local model support** through Ollama, Hugging Face Transformers, and quantization recipes.
 - **Example chatbot** ([streamlit/genscai_chatbot.py](streamlit/genscai_chatbot.py)) for exploring infectious disease modeling frameworks (LASER, Starsim) and the research literature.
 
@@ -76,7 +77,7 @@ reusable Python package, datasets, generated artifacts, and tests are shared at 
 
 ```
 genscai/
-├── genscai/                   Reusable Python package (retrieval, classification, research, knowledge_base, simulation, tools)
+├── genscai/                   Reusable Python package (retrieval, classification, research, corpus, knowledge_base, simulation, tools)
 ├── 00 - getting started/      Environment setup
 ├── 01 - data collection/      Retrieve abstracts/articles (MIDAS, medRxiv, arXiv)
 ├── 02 - text analysis/        Information extraction, embeddings, classification
@@ -107,7 +108,7 @@ Each top-level folder is a use case with its own README listing its notebooks an
 | [04 - semantic search](04%20-%20semantic%20search/) | medRxiv vector index and retrieval-augmented generation (RAG) |
 | [05 - model optimization](05%20-%20model%20optimization/) | Quantization and fine-tuning |
 | [06 - agents](06%20-%20agents/) | Tool-using agents (MCP, smolagents, AIMU workflows) |
-| [07 - literature research](07%20-%20literature%20research/) | Agentic literature research across six frameworks |
+| [07 - literature research](07%20-%20literature%20research/) | Agentic literature research across six frameworks + a `genscai.corpus` build |
 | [08 - disease simulation](08%20-%20disease%20simulation/) | Compartmental-model intervention-planning agent |
 | [09 - evaluation](09%20-%20evaluation/) | Benchmarking models and agent configurations |
 
@@ -117,18 +118,20 @@ Within a folder, notebooks are numbered from `01` and meant to be worked through
 
 The [`07 - literature research/`](07%20-%20literature%20research/) folder implements one identical use case — agentic
 literature research over medRxiv/bioRxiv with a relevance-gated local document store and a critic
-feedback loop — across **six frameworks**, all on local Ollama models. Read them side by side to
-compare the frameworks. Requires `uv sync --all-extras`. See its
+feedback loop — **six ways across agent frameworks** plus a "batteries-included" build from the
+project's own [`genscai.corpus.Corpus`](genscai/corpus.py) helper (on AIMU), all on local Ollama
+models. Read them side by side. Requires `uv sync --all-extras`. See its
 [README](07%20-%20literature%20research/README.md).
 
-| # | Framework |
+| # | Implementation |
 | --- | --- |
 | 01 | [AIMU](07%20-%20literature%20research/notebooks/01%20-%20AIMU.ipynb) |
-| 02 | [smolagents](07%20-%20literature%20research/notebooks/02%20-%20smolagents.ipynb) |
-| 03 | [LangGraph](07%20-%20literature%20research/notebooks/03%20-%20LangGraph.ipynb) |
-| 04 | [PydanticAI](07%20-%20literature%20research/notebooks/04%20-%20PydanticAI.ipynb) |
-| 05 | [CrewAI](07%20-%20literature%20research/notebooks/05%20-%20CrewAI.ipynb) |
-| 06 | [LlamaIndex](07%20-%20literature%20research/notebooks/06%20-%20LlamaIndex.ipynb) |
+| 02 | [genscai](07%20-%20literature%20research/notebooks/02%20-%20genscai.ipynb) (`genscai.corpus.Corpus`, on AIMU) |
+| 03 | [smolagents](07%20-%20literature%20research/notebooks/03%20-%20smolagents.ipynb) |
+| 04 | [LangGraph](07%20-%20literature%20research/notebooks/04%20-%20LangGraph.ipynb) |
+| 05 | [PydanticAI](07%20-%20literature%20research/notebooks/05%20-%20PydanticAI.ipynb) |
+| 06 | [CrewAI](07%20-%20literature%20research/notebooks/06%20-%20CrewAI.ipynb) |
+| 07 | [LlamaIndex](07%20-%20literature%20research/notebooks/07%20-%20LlamaIndex.ipynb) |
 
 ### Disease simulation
 

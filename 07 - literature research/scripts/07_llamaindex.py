@@ -1,13 +1,9 @@
-"""Script form of the "06 - LlamaIndex" notebook (see ../notebooks/).
+"""Script form of the "07 - LlamaIndex" notebook (see ../notebooks/).
 
 The same agentic literature-research workflow as the other notebooks in this folder, implemented with LlamaIndex, captured as a runnable script. Requires a local Ollama server (see the folder README).
 """
 
 import asyncio
-
-import os
-
-import dotenv
 
 from llama_index.core import VectorStoreIndex, Document
 from llama_index.core.agent.workflow import ReActAgent
@@ -15,46 +11,22 @@ from llama_index.core.workflow import Workflow, step, Event, StartEvent, StopEve
 from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.ollama import OllamaEmbedding
 
-from genscai import research, paths
+import shared
 
-dotenv.load_dotenv(paths.root / ".env")
+llm = Ollama(model=shared.agent_model(), base_url=shared.OLLAMA_URL, request_timeout=600.0)
+embed_model = OllamaEmbedding(model_name="nomic-embed-text", base_url=shared.OLLAMA_URL)
 
-MODEL = os.environ.get("GENSCAI_AGENT_MODEL", "qwen3.6:27b")
-OLLAMA_URL = "http://localhost:11434"
-MAX_ROUNDS = 2
-
-RESEARCH_QUESTION = (
-    "What interventions and control strategies have recent preprints proposed or evaluated for "
-    "dengue outbreaks, and what evidence do they report?"
-)
-
-llm = Ollama(model=MODEL, base_url=OLLAMA_URL, request_timeout=600.0)
-embed_model = OllamaEmbedding(model_name="nomic-embed-text", base_url=OLLAMA_URL)
-
-for h in research.search_medrxiv("dengue vaccination", max_results=3):
-    print(h["date"], "-", h["title"][:80])
+shared.print_search_preview()
 
 index = VectorStoreIndex.from_documents([], embed_model=embed_model)
 
+# Cache of search hits so a paper can be saved by DOI alone.
 _seen: dict[str, dict] = {}
 
 
 def search_preprints(query: str) -> str:
     """Search medRxiv and bioRxiv preprints. Always include the key topic term (e.g. 'dengue')."""
-    try:
-        results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
-    except Exception as exc:
-        return f"Search temporarily unavailable ({exc}). Try again shortly or rephrase the query."
-    if not results:
-        return "No results found."
-    blocks = []
-    for article in results:
-        _seen[article["doi"]] = article
-        blocks.append(
-            f"DOI: {article['doi']}\nTitle: {article['title']}\nDate: {article['date']}\n"
-            f"Abstract: {(article['abstract'] or '')[:600]}"
-        )
-    return "\n\n".join(blocks)
+    return shared.search_preprints(query, _seen)
 
 
 def save_relevant_paper(doi: str) -> str:
@@ -71,6 +43,7 @@ def save_relevant_paper(doi: str) -> str:
     )
     return f"Saved: {article['title']}"
 
+
 class SynthesizeEvent(Event):
     feedback: str = ""
 
@@ -79,6 +52,8 @@ class EvaluateEvent(Event):
     synthesis: str
 
 
+# A ReAct-specific variant of shared.RESEARCHER_SYSTEM: it tells the agent to save a handful of
+# papers and then stop, since the synthesis runs as a separate step.
 RESEARCHER_SYSTEM = (
     "You curate a corpus of preprints. Use search_preprints (always include 'dengue' in queries). "
     "For each candidate, if its abstract is plausibly relevant, call save_relevant_paper(doi), erring "
@@ -102,7 +77,7 @@ class ResearchWorkflow(Workflow):
         # A local model may keep looping past a sensible stopping point and exhaust the agent's step
         # budget; the relevant papers are already saved to the index, so we proceed to synthesis either way.
         try:
-            await agent.run(RESEARCH_QUESTION)
+            await agent.run(shared.RESEARCH_QUESTION)
         except Exception as exc:
             print(f"(research agent stopped early: {exc})")
         return SynthesizeEvent()
@@ -113,7 +88,7 @@ class ResearchWorkflow(Workflow):
         query_engine = index.as_query_engine(llm=llm, similarity_top_k=8)
         instruction = (
             "Write a concise synthesis answering: "
-            f"{RESEARCH_QUESTION} Cite each paper by title and DOI from the context."
+            f"{shared.RESEARCH_QUESTION} Cite each paper by title and DOI from the context."
         )
         if ev.feedback:
             instruction += f"\nImprove using this feedback: {ev.feedback}"
@@ -124,15 +99,14 @@ class ResearchWorkflow(Workflow):
     async def evaluate(self, ev: EvaluateEvent) -> SynthesizeEvent | StopEvent:
         verdict = str(
             await llm.acomplete(
-                "Reply with exactly PASS if this synthesis answers the question with cited evidence "
-                f"(title + DOI). Otherwise reply REVISE: <specific gap>.\n\n"
-                f"Question: {RESEARCH_QUESTION}\n\nSynthesis:\n{ev.synthesis}"
+                f"{shared.CRITIC_SYSTEM}\n\nQuestion: {shared.RESEARCH_QUESTION}\n\nSynthesis:\n{ev.synthesis}"
             )
         )
         print(f"--- critic (round {self.rounds}): {verdict[:120]}")
-        if "PASS" in verdict or self.rounds >= MAX_ROUNDS:
+        if "PASS" in verdict or self.rounds >= shared.MAX_ROUNDS:
             return StopEvent(result=ev.synthesis)
         return SynthesizeEvent(feedback=verdict)
+
 
 workflow = ResearchWorkflow(timeout=1200, verbose=True)
 synthesis = asyncio.run(workflow.run())
@@ -140,6 +114,4 @@ print("\n=== FINAL SYNTHESIS ===\n")
 print(synthesis)
 
 docs = index.docstore.docs
-print(f"{len(docs)} papers saved:")
-for node in docs.values():
-    print(" -", node.metadata.get("title", "")[:80])
+shared.print_saved_summary([node.metadata.get("title", "") for node in docs.values()])

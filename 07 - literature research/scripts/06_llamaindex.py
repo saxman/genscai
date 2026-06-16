@@ -41,7 +41,10 @@ _seen: dict[str, dict] = {}
 
 def search_preprints(query: str) -> str:
     """Search medRxiv and bioRxiv preprints. Always include the key topic term (e.g. 'dengue')."""
-    results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
+    try:
+        results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
+    except Exception as exc:
+        return f"Search temporarily unavailable ({exc}). Try again shortly or rephrase the query."
     if not results:
         return "No results found."
     blocks = []

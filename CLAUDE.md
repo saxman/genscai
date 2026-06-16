@@ -51,7 +51,7 @@ and scripts are renumbered from `01`. The medRxiv download/index logic lives in
 medRxiv/bioRxiv with a relevance-gated local document store and a critic feedback loop — across six
 frameworks (AIMU, smolagents, LangGraph, PydanticAI, CrewAI, LlamaIndex), all on local Ollama models;
 the notebooks are meant to be compared, not sequenced. Shared search/fetch tools live in
-`genscai/research.py`; install with `uv sync --all-extras` (the `agents` extra). Default model
+`genscai/research.py`; install with `uv sync --all-extras` (the `literature_research` extra). Default model
 `qwen3.6:27b`, overridable via `GENSCAI_AGENT_MODEL`. See `07 - literature research/README.md`.
 
 The RAG notebooks (`04 - semantic search/notebooks/01` Pipeline and `02` Evaluation) depend on `output/medrxiv.db` built by

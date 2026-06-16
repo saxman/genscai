@@ -58,7 +58,7 @@ code (`python "scripts/01_aimu.py"`, etc.):
 Install the agent frameworks (in addition to the base project):
 
 ```bash
-uv sync --all-extras   # includes the `agents` extra
+uv sync --all-extras   # includes the `literature_research` extra
 ```
 
 Pull a tool-capable chat model and an embedding model with Ollama:

@@ -56,7 +56,10 @@ researcher = Agent(model, system_prompt=SYSTEM)
 @researcher.tool_plain
 def search_preprints(query: str) -> str:
     """Search medRxiv and bioRxiv preprints. Returns each hit's DOI, title, date, and abstract."""
-    results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
+    try:
+        results = research.search_medrxiv(query, max_results=5) + research.search_biorxiv(query, max_results=3)
+    except Exception as exc:
+        return f"Search temporarily unavailable ({exc}). Try again shortly or rephrase the query."
     if not results:
         return "No results found."
     blocks = []

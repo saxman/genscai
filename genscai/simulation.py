@@ -1,9 +1,16 @@
 """Modular compartmental disease-modeling engine.
 
-A single coupled SEIR system is integrated each step with ``scipy.integrate.solve_ivp``. The
-only structural choice exposed to a caller (or an agent) is *which mechanism modules to
-include* - the mixing structure and an optional host-vector module - so results stay
-epidemiologically consistent regardless of which modules are active.
+A single coupled SEIR(+hospitalization) system is integrated each step with
+``scipy.integrate.solve_ivp``. The only structural choice exposed to a caller (or an agent)
+is *which mechanism modules to include* - the mixing structure and an optional host-vector
+module - so results stay epidemiologically consistent regardless of which modules are active.
+
+This is a teaching engine, not a validated public-health model. Its outputs are illustrative.
+The rigorous-analysis methods below (:meth:`Simulation.calibrate_r0`,
+:meth:`Simulation.optimize_intervention`, :meth:`Simulation.run_ensemble`,
+:meth:`Simulation.sensitivity_analysis`) exist so that any conclusion drawn from the model is
+grounded in data and carries an uncertainty range, rather than being a single point estimate
+read off one deterministic run.
 
 Mechanism modules
 -----------------
@@ -17,12 +24,18 @@ Mechanism modules
   transmission is disabled and all transmission flows through vectors, governed by
   ``biting_rate`` (not ``r0``).
 
-Interventions are time-windowed parameter modifiers; see :class:`Intervention`.
+Disease burden
+--------------
+Infectious hosts recover or are hospitalized (``hospitalized_fraction``); hospitalized hosts
+recover or die. Mortality rises when hospital occupancy exceeds ``hospital_capacity`` (the
+crisis-care effect, scaled by ``crisis_mortality_multiplier``), which is why keeping peak
+hospital demand under capacity is the outcome that matters, not infections alone.
 
-Per-patch state carries the four SEIR compartments plus two non-physical trackers: ``C``
-(cumulative infections, the integral of the S->E flux) and ``V`` (cumulative vaccinated).
-The trackers let cumulative incidence be measured separately from vaccination, which also
-drains ``S``. Optional vector compartments ``Sv``/``Iv`` are appended per patch.
+Per-patch state carries the SEIR compartments plus the current hospitalized count ``H`` and
+three non-physical trackers: ``D`` (cumulative deaths), ``C`` (cumulative infections, the
+integral of the S->E flux) and ``V`` (cumulative vaccinated). The trackers let cumulative
+incidence, deaths, and vaccination be measured separately. Optional vector compartments
+``Sv``/``Iv`` are appended per patch.
 """
 
 from __future__ import annotations
@@ -33,12 +46,23 @@ from typing import Optional
 
 import numpy as np
 from scipy.integrate import solve_ivp
+from scipy.optimize import minimize_scalar
+from scipy.stats import spearmanr
+from scipy.stats.qmc import LatinHypercube
 
 REFERENCE_CONTACTS = 10.0
 DEFAULT_VECTOR_MORTALITY = 0.1
 DEFAULT_VACCINATION_COVERAGE_CAP = 0.8
+# Acute-care beds per capita used when a caller does not specify hospital_capacity.
+DEFAULT_BEDS_PER_CAPITA = 0.0025
 
 INTERVENTION_KINDS = ("vaccination", "contact_reduction", "isolation", "treatment")
+
+# Epidemiological parameters carrying real-world uncertainty, perturbed by the ensemble.
+_UNCERTAIN_PARAMETERS = ("incubation_days", "infectious_days", "hospitalized_fraction", "hospital_fatality_fraction")
+
+# Metrics collected per ensemble sample (all scalar).
+_ENSEMBLE_METRICS = ("peak_infectious", "peak_hospitalized", "cumulative_deaths", "attack_rate", "days_over_capacity")
 
 
 @dataclass
@@ -82,10 +106,15 @@ class ModelConfig:
     vector_population: float = 0.0
     vector_mortality: float = DEFAULT_VECTOR_MORTALITY
     coverage_cap: float = DEFAULT_VACCINATION_COVERAGE_CAP
+    hospitalized_fraction: float = 0.05
+    hospital_stay_days: float = 10.0
+    hospital_fatality_fraction: float = 0.15
+    hospital_capacity: float = 0.0
+    crisis_mortality_multiplier: float = 2.0
 
 
-# Per-patch compartment layout. Trackers C and V are non-physical accumulators.
-_HOST_COMPARTMENTS = ("S", "E", "I", "R", "C", "V")
+# Per-patch compartment layout. H is current hospitalizations; D/C/V are accumulators.
+_HOST_COMPARTMENTS = ("S", "E", "I", "R", "H", "D", "C", "V")
 _VECTOR_COMPARTMENTS = ("Sv", "Iv")
 
 
@@ -95,9 +124,11 @@ class Simulation:
     def __init__(self) -> None:
         self.config: Optional[ModelConfig] = None
         self.interventions: list[Intervention] = []
+        self._assemble_kwargs: dict = {}
         self._compartments: tuple[str, ...] = ()
         self._index: dict[str, int] = {}
         self._patch_population: float = 0.0
+        self._patch_capacity: float = 0.0
         self._vector_patch_population: float = 0.0
         self._initial_state: Optional[np.ndarray] = None
         self._times: list[float] = []
@@ -121,11 +152,38 @@ class Simulation:
         include_vector: bool = False,
         biting_rate: float = 0.0,
         vector_population: float = 0.0,
+        hospitalized_fraction: float = 0.05,
+        hospital_stay_days: float = 10.0,
+        hospital_fatality_fraction: float = 0.15,
+        hospital_capacity: float = 0.0,
+        crisis_mortality_multiplier: float = 2.0,
     ) -> "Simulation":
         if mixing not in ("mass_action", "metapopulation", "network"):
             raise ValueError(f"unknown mixing '{mixing}'")
         if num_patches < 1:
             raise ValueError("num_patches must be >= 1")
+
+        # Capture the exact arguments so clones (calibration, optimization, ensemble) can be
+        # rebuilt by re-calling assemble with selective overrides.
+        self._assemble_kwargs = dict(
+            mixing=mixing,
+            population=population,
+            initial_infected=initial_infected,
+            r0=r0,
+            incubation_days=incubation_days,
+            infectious_days=infectious_days,
+            num_patches=num_patches,
+            migration_rate=migration_rate,
+            mean_contacts=mean_contacts,
+            include_vector=include_vector,
+            biting_rate=biting_rate,
+            vector_population=vector_population,
+            hospitalized_fraction=hospitalized_fraction,
+            hospital_stay_days=hospital_stay_days,
+            hospital_fatality_fraction=hospital_fatality_fraction,
+            hospital_capacity=hospital_capacity,
+            crisis_mortality_multiplier=crisis_mortality_multiplier,
+        )
 
         gamma = 1.0 / infectious_days
         sigma = 1.0 / incubation_days
@@ -133,6 +191,8 @@ class Simulation:
 
         if vector_population <= 0:
             vector_population = population
+        if hospital_capacity <= 0:
+            hospital_capacity = population * DEFAULT_BEDS_PER_CAPITA
 
         self.config = ModelConfig(
             mixing=mixing,
@@ -147,6 +207,11 @@ class Simulation:
             include_vector=include_vector,
             biting_rate=biting_rate,
             vector_population=vector_population,
+            hospitalized_fraction=hospitalized_fraction,
+            hospital_stay_days=hospital_stay_days,
+            hospital_fatality_fraction=hospital_fatality_fraction,
+            hospital_capacity=hospital_capacity,
+            crisis_mortality_multiplier=crisis_mortality_multiplier,
         )
         self.interventions = []
         self._checkpoints = {}
@@ -154,12 +219,25 @@ class Simulation:
         self._compartments = _HOST_COMPARTMENTS + (_VECTOR_COMPARTMENTS if include_vector else ())
         self._index = {name: i for i, name in enumerate(self._compartments)}
         self._patch_population = population / num_patches
+        self._patch_capacity = hospital_capacity / num_patches
         self._vector_patch_population = vector_population / num_patches
 
         self._initial_state = self._build_initial_state()
         self._times = [0.0]
         self._states = [self._initial_state.copy()]
         return self
+
+    def reconfigure(self, **overrides) -> "Simulation":
+        """Re-assemble the model with selected parameters changed.
+
+        Merges ``overrides`` into the original assemble arguments and rebuilds, returning to
+        day 0 and clearing interventions. Used to adopt a calibrated parameter value.
+        """
+        if not self._assemble_kwargs:
+            raise RuntimeError("call assemble() before reconfigure()")
+        kwargs = dict(self._assemble_kwargs)
+        kwargs.update(overrides)
+        return self.assemble(**kwargs)
 
     def _build_initial_state(self) -> np.ndarray:
         state = np.zeros((self.config.num_patches, len(self._compartments)))
@@ -228,8 +306,9 @@ class Simulation:
         susceptible = state[:, idx["S"]]
         exposed = state[:, idx["E"]]
         infectious = state[:, idx["I"]]
+        hospitalized = state[:, idx["H"]]
         vaccinated = state[:, idx["V"]]
-        host_n = susceptible + exposed + infectious + state[:, idx["R"]]
+        host_n = susceptible + exposed + infectious + state[:, idx["R"]] + hospitalized
         safe_n = np.where(host_n > 0, host_n, 1.0)
 
         if cfg.include_vector:
@@ -252,14 +331,36 @@ class Simulation:
         cap = cfg.coverage_cap * self._patch_population
         vaccination_flow = np.where(vaccinated < cap, mods["vaccination_rate"] * susceptible, 0.0)
 
+        # Infectious hosts leave at gamma_eff; a fraction are hospitalized, the rest recover.
+        leaving_infectious = gamma_eff * infectious
+        to_hospital = cfg.hospitalized_fraction * leaving_infectious
+        recover_from_infectious = leaving_infectious - to_hospital
+
+        # Hospitalized hosts leave at 1/stay; fatality rises with over-capacity occupancy.
+        leaving_hospital = hospitalized / cfg.hospital_stay_days
+        safe_h = np.where(hospitalized > 0, hospitalized, 1.0)
+        over_capacity_fraction = np.where(
+            hospitalized > self._patch_capacity, (hospitalized - self._patch_capacity) / safe_h, 0.0
+        )
+        effective_fatality = np.minimum(
+            cfg.hospital_fatality_fraction * (1.0 + (cfg.crisis_mortality_multiplier - 1.0) * over_capacity_fraction),
+            1.0,
+        )
+        deaths = leaving_hospital * effective_fatality
+        recover_from_hospital = leaving_hospital - deaths
+
         derivs[:, idx["S"]] += -new_infections - vaccination_flow
         derivs[:, idx["E"]] += new_infections - cfg.sigma * exposed
-        derivs[:, idx["I"]] += cfg.sigma * exposed - gamma_eff * infectious
-        derivs[:, idx["R"]] += gamma_eff * infectious + vaccination_flow
+        derivs[:, idx["I"]] += cfg.sigma * exposed - leaving_infectious
+        derivs[:, idx["R"]] += recover_from_infectious + recover_from_hospital + vaccination_flow
+        derivs[:, idx["H"]] += to_hospital - leaving_hospital
+        derivs[:, idx["D"]] += deaths
         derivs[:, idx["C"]] += new_infections
         derivs[:, idx["V"]] += vaccination_flow
 
         if cfg.mixing == "metapopulation" and cfg.num_patches > 1 and cfg.migration_rate > 0:
+            # Living, mobile compartments diffuse toward the cross-patch mean. Hospitalized
+            # hosts and the dead do not migrate.
             for name in ("S", "E", "I", "R"):
                 column = state[:, idx[name]]
                 derivs[:, idx[name]] += cfg.migration_rate * (column.mean() - column)
@@ -311,6 +412,8 @@ class Simulation:
             "exposed": float(current[:, idx["E"]].sum()),
             "infectious": float(current[:, idx["I"]].sum()),
             "recovered": float(current[:, idx["R"]].sum()),
+            "hospitalized": float(current[:, idx["H"]].sum()),
+            "deaths": float(current[:, idx["D"]].sum()),
         }
         if self.config.include_vector:
             result["vector_infectious"] = float(current[:, idx["Iv"]].sum())
@@ -322,11 +425,27 @@ class Simulation:
     def cumulative_infections_by_patch(self) -> np.ndarray:
         return self._current()[:, self._index["C"]].copy()
 
+    def _series(self, compartment: str) -> np.ndarray:
+        idx = self._index[compartment]
+        return np.array([s[:, idx].sum() for s in self._states])
+
+    def cumulative_infections_series_to(self, day: float) -> tuple[np.ndarray, np.ndarray]:
+        """Return (times, total cumulative infections) for a fresh run advanced to ``day``.
+
+        Non-mutating: runs on a clone so the live session is unaffected. Used to generate or
+        compare against observed incidence data.
+        """
+        clone = self._simulate(day, interventions=[])
+        return np.array(clone._times), clone._series("C")
+
     def metrics(self) -> dict:
         idx = self._index
-        infectious_series = np.array([s[:, idx["I"]].sum() for s in self._states])
+        infectious_series = self._series("I")
+        hospital_series = self._series("H")
         peak_position = int(infectious_series.argmax())
+        hospital_peak_position = int(hospital_series.argmax())
         cumulative_infections = float(self._current()[:, idx["C"]].sum())
+        capacity = self.config.hospital_capacity
 
         metrics = dict(self.state())
         metrics.update(
@@ -336,6 +455,11 @@ class Simulation:
             cumulative_infections=cumulative_infections,
             attack_rate=cumulative_infections / self.config.population,
             r_effective=self._effective_reproduction_number(),
+            peak_hospitalized=float(hospital_series[hospital_peak_position]),
+            peak_hospital_day=float(self._times[hospital_peak_position]),
+            hospital_capacity=float(capacity),
+            days_over_capacity=int((hospital_series > capacity).sum()),
+            cumulative_deaths=float(self._current()[:, idx["D"]].sum()),
         )
         return metrics
 
@@ -347,6 +471,170 @@ class Simulation:
         gamma_eff = self.config.gamma * mods["treatment_factor"]
         susceptible = self._current()[:, self._index["S"]].sum()
         return float((beta_eff / gamma_eff) * (susceptible / self.config.population))
+
+    # -- rigorous-analysis methods -------------------------------------------------------
+
+    def _simulate(
+        self, days: float, assemble_overrides: Optional[dict] = None, interventions: Optional[list] = None
+    ) -> "Simulation":
+        """Build a fresh clone from the stored assemble args (with overrides), apply the given
+        interventions, advance it, and return it. Never mutates this session."""
+        kwargs = dict(self._assemble_kwargs)
+        if assemble_overrides:
+            kwargs.update(assemble_overrides)
+        clone = Simulation()
+        clone.assemble(**kwargs)
+        for iv in interventions or []:
+            clone.apply_intervention(iv.kind, iv.magnitude, iv.start_day, iv.end_day)
+        if days > 0:
+            clone.advance(days)
+        return clone
+
+    def calibrate_r0(
+        self, observed_days: list, observed_cumulative: list, low: float = 0.3, high: float = 8.0
+    ) -> dict:
+        """Fit ``r0`` to observed cumulative-incidence data, holding other parameters fixed.
+
+        Returns ``{"r0": fitted, "sse": residual_sum_of_squares}``. Grounds the transmission
+        rate in data instead of assuming it. Non-mutating.
+        """
+        observed_days = list(observed_days)
+        observed = np.array(observed_cumulative, dtype=float)
+        horizon = max(observed_days)
+
+        def sse(r0: float) -> float:
+            times, cumulative = self._simulate(horizon, {"r0": float(r0)}, interventions=[])._series_at(observed_days)
+            return float(np.sum((cumulative - observed) ** 2))
+
+        result = minimize_scalar(sse, bounds=(low, high), method="bounded")
+        return {"r0": float(result.x), "sse": float(result.fun)}
+
+    def _series_at(self, days: list) -> tuple[list, np.ndarray]:
+        """Interpolate this (already-advanced) session's cumulative infections at ``days``."""
+        times = np.array(self._times)
+        cumulative = self._series("C")
+        return days, np.interp(days, times, cumulative)
+
+    def optimize_intervention(
+        self,
+        kind: str,
+        metric: str,
+        threshold: float,
+        days: float,
+        low: float = 0.0,
+        high: float = 1.0,
+        max_iter: int = 26,
+    ) -> dict:
+        """Find the smallest magnitude of a single ongoing intervention (from day 0) that keeps
+        ``metric`` at or below ``threshold`` over ``days``.
+
+        Assumes the metric decreases monotonically with magnitude (true for the supported
+        interventions and the burden/prevalence metrics). Returns
+        ``{"magnitude", "value", "met"}``. Non-mutating; ignores currently-applied interventions.
+        """
+        if kind not in INTERVENTION_KINDS:
+            raise ValueError(f"unknown intervention kind '{kind}'")
+
+        def evaluate(magnitude: float) -> float:
+            trial = Intervention(kind, magnitude, 0.0, None)
+            return self._simulate(days, interventions=[trial]).metrics()[metric]
+
+        if evaluate(low) <= threshold:
+            return {"magnitude": low, "value": evaluate(low), "met": True}
+        if evaluate(high) > threshold:
+            return {"magnitude": high, "value": evaluate(high), "met": False}
+
+        lo, hi = low, high
+        for _ in range(max_iter):
+            mid = 0.5 * (lo + hi)
+            if evaluate(mid) <= threshold:
+                hi = mid
+            else:
+                lo = mid
+        return {"magnitude": hi, "value": evaluate(hi), "met": True}
+
+    def _ensemble_samples(
+        self, days: float, n_samples: int, seed: int, spread: float, vary: Optional[list]
+    ) -> tuple[list, np.ndarray, dict]:
+        """Latin-hypercube sample the uncertain parameters around their assembled values, run
+        the model (keeping the current interventions) for each, and collect output metrics."""
+        if vary is None:
+            transmission = "biting_rate" if self.config.include_vector else "r0"
+            vary = [transmission, *_UNCERTAIN_PARAMETERS]
+
+        base = {name: float(self._assemble_kwargs[name]) for name in vary}
+        sampler = LatinHypercube(d=len(vary), seed=seed)
+        unit = sampler.random(n_samples)  # (n_samples, d) in [0, 1)
+
+        sample_matrix = np.zeros((n_samples, len(vary)))
+        outputs = {metric: np.zeros(n_samples) for metric in _ENSEMBLE_METRICS}
+
+        for row in range(n_samples):
+            overrides = {}
+            for col, name in enumerate(vary):
+                value = base[name] * (1.0 - spread + 2.0 * spread * unit[row, col])
+                overrides[name] = value
+                sample_matrix[row, col] = value
+            metrics = self._simulate(days, overrides, interventions=list(self.interventions)).metrics()
+            for metric in _ENSEMBLE_METRICS:
+                outputs[metric][row] = metrics[metric]
+
+        return vary, sample_matrix, outputs
+
+    def run_ensemble(
+        self,
+        days: float,
+        n_samples: int = 100,
+        seed: int = 0,
+        spread: float = 0.2,
+        vary: Optional[list] = None,
+    ) -> dict:
+        """Quantify outcome uncertainty by running an ensemble over plausible parameter values.
+
+        Returns per-metric ``{median, mean, p05, p95}`` summaries. Reproducible for a given
+        ``seed``. Keeps the currently-applied interventions fixed across the ensemble.
+        """
+        vary, _, outputs = self._ensemble_samples(days, n_samples, seed, spread, vary)
+        summary = {}
+        for metric, values in outputs.items():
+            summary[metric] = {
+                "median": float(np.median(values)),
+                "mean": float(np.mean(values)),
+                "p05": float(np.percentile(values, 5)),
+                "p95": float(np.percentile(values, 95)),
+            }
+        return {"n_samples": n_samples, "horizon_days": days, "parameters": vary, "summary": summary}
+
+    def sensitivity_analysis(
+        self,
+        days: float,
+        target: str = "peak_hospitalized",
+        n_samples: int = 200,
+        seed: int = 0,
+        spread: float = 0.2,
+        vary: Optional[list] = None,
+    ) -> list:
+        """Rank which parameters drive ``target`` via Spearman rank correlation over the
+        ensemble samples. Returns a list of ``{"parameter", "correlation"}`` sorted by
+        absolute correlation (descending)."""
+        if target not in _ENSEMBLE_METRICS:
+            raise ValueError(f"unknown target '{target}'; expected one of {_ENSEMBLE_METRICS}")
+        vary, sample_matrix, outputs = self._ensemble_samples(days, n_samples, seed, spread, vary)
+        target_values = outputs[target]
+
+        drivers = []
+        for col, name in enumerate(vary):
+            inputs = sample_matrix[:, col]
+            if np.allclose(inputs, inputs[0]):
+                correlation = 0.0  # parameter did not vary (base value was 0)
+            else:
+                correlation = float(spearmanr(inputs, target_values).statistic)
+                if np.isnan(correlation):
+                    correlation = 0.0
+            drivers.append({"parameter": name, "correlation": correlation})
+
+        drivers.sort(key=lambda d: abs(d["correlation"]), reverse=True)
+        return drivers
 
     # -- checkpoint / rewind / reset -----------------------------------------------------
 

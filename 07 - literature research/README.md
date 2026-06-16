@@ -39,6 +39,20 @@ ChromaDB collection, the idiomatic choice for each. CrewAI has a native Knowledg
 fixed at agent-creation time and does not fit gated mid-run curation, so it uses tools too (the
 notebook explains and sketches the Knowledge alternative).
 
+## Scripts
+
+Each notebook has a runnable command-line counterpart in [`scripts/`](scripts) containing the same
+code (`python "scripts/01_aimu.py"`, etc.):
+
+| Script | Notebook |
+| --- | --- |
+| [`01_aimu.py`](scripts/01_aimu.py) | AIMU |
+| [`02_smolagents.py`](scripts/02_smolagents.py) | smolagents |
+| [`03_langgraph.py`](scripts/03_langgraph.py) | LangGraph |
+| [`04_pydanticai.py`](scripts/04_pydanticai.py) | PydanticAI |
+| [`05_crewai.py`](scripts/05_crewai.py) | CrewAI |
+| [`06_llamaindex.py`](scripts/06_llamaindex.py) | LlamaIndex |
+
 ## Prerequisites
 
 Install the agent frameworks (in addition to the base project):

@@ -2008,7 +2008,14 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-agents = [
+cuda = [
+    { name = "nvidia-ml-py" },
+]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+literature-research = [
     { name = "arxiv" },
     { name = "crewai" },
     { name = "crewai-tools" },
@@ -2018,13 +2025,6 @@ agents = [
     { name = "llama-index-embeddings-ollama" },
     { name = "llama-index-llms-ollama" },
     { name = "pydantic-ai-slim", extra = ["openai"] },
-]
-cuda = [
-    { name = "nvidia-ml-py" },
-]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
 ]
 notebooks = [
     { name = "ipykernel" },
@@ -2036,27 +2036,27 @@ notebooks = [
 [package.metadata]
 requires-dist = [
     { name = "aimu", extras = ["all"], editable = "../aimu" },
-    { name = "arxiv", marker = "extra == 'agents'" },
+    { name = "arxiv", marker = "extra == 'literature-research'" },
     { name = "beautifulsoup4" },
     { name = "bitsandbytes" },
     { name = "chromadb" },
-    { name = "crewai", marker = "extra == 'agents'" },
-    { name = "crewai-tools", marker = "extra == 'agents'" },
+    { name = "crewai", marker = "extra == 'literature-research'" },
+    { name = "crewai-tools", marker = "extra == 'literature-research'" },
     { name = "ipykernel", marker = "extra == 'notebooks'" },
     { name = "ipywidgets", marker = "extra == 'notebooks'" },
     { name = "json-repair" },
     { name = "langchain" },
-    { name = "langchain-chroma", marker = "extra == 'agents'" },
+    { name = "langchain-chroma", marker = "extra == 'literature-research'" },
     { name = "langchain-community" },
     { name = "langchain-experimental" },
     { name = "langchain-ollama" },
     { name = "langchain-text-splitters" },
     { name = "langextract" },
-    { name = "langgraph", marker = "extra == 'agents'" },
+    { name = "langgraph", marker = "extra == 'literature-research'" },
     { name = "litellm" },
-    { name = "llama-index", marker = "extra == 'agents'" },
-    { name = "llama-index-embeddings-ollama", marker = "extra == 'agents'" },
-    { name = "llama-index-llms-ollama", marker = "extra == 'agents'" },
+    { name = "llama-index", marker = "extra == 'literature-research'" },
+    { name = "llama-index-embeddings-ollama", marker = "extra == 'literature-research'" },
+    { name = "llama-index-llms-ollama", marker = "extra == 'literature-research'" },
     { name = "nbconvert", marker = "extra == 'notebooks'" },
     { name = "nbformat", marker = "extra == 'notebooks'" },
     { name = "nest-asyncio" },
@@ -2064,7 +2064,7 @@ requires-dist = [
     { name = "nvidia-ml-py", marker = "extra == 'cuda'" },
     { name = "pandas" },
     { name = "pyarrow" },
-    { name = "pydantic-ai-slim", extras = ["openai"], marker = "extra == 'agents'" },
+    { name = "pydantic-ai-slim", extras = ["openai"], marker = "extra == 'literature-research'" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "python-dotenv" },
     { name = "ruff", marker = "extra == 'dev'" },
@@ -2076,7 +2076,7 @@ requires-dist = [
     { name = "tqdm" },
     { name = "watchdog" },
 ]
-provides-extras = ["dev", "notebooks", "cuda", "agents"]
+provides-extras = ["dev", "notebooks", "cuda", "literature-research"]
 
 [[package]]
 name = "gitdb"

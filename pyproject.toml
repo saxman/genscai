@@ -47,9 +47,9 @@ notebooks = [
 cuda = [
     "nvidia-ml-py"
 ]
-# Agent frameworks compared in notebooks/agent-frameworks/. aimu, smolagents, langchain,
+# Agent frameworks compared in the literature research use case. aimu, smolagents, langchain,
 # langchain-ollama, and chromadb are already core dependencies.
-agents = [
+literature_research = [
     "langgraph",
     "langchain-chroma",
     "pydantic-ai-slim[openai]",

@@ -1,11 +1,16 @@
-# GenScAI
+<div align="center">
 
-[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-![GitHub License](https://img.shields.io/github/license/saxman/genscai)
-![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fsaxman%2Fgenscai%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/genscai-horizontal-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/genscai-horizontal.svg">
+  <img alt="GenScAI" src="assets/genscai-horizontal.svg" width="420">
+</picture>
 
 **Generative AI tools and recipes for science and research.**
+
+![GitHub License](https://img.shields.io/github/license/saxman/genscai) ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fsaxman%2Fgenscai%2Frefs%2Fheads%2Fmain%2Fpyproject.toml) [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+</div>
 
 GenScAI is a hands-on toolkit for applying large language models to scientific workflows, with a focus on infectious disease research and modeling. It pairs a reusable Python package with runnable notebooks and example applications so researchers can retrieve literature, extract structured information, classify and cluster papers, build knowledge graphs, and prototype LLM agents using local or hosted models.
 

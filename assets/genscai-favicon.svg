@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="-2 -0.5 32 32" role="img">
+  <title>GenScAI</title>
+  <!-- Mark scaled to fit 32x32 tight: scale = 32/122 = 0.262, width = 30.6 -->
+  <g transform="scale(0.2623)">
+    <line x1="48" y1="66" x2="48" y2="12" stroke="#9FE1CB" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="48" y1="66" x2="96" y2="38" stroke="#9FE1CB" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="48" y1="66" x2="100" y2="82" stroke="#9FE1CB" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="48" y1="66" x2="72" y2="112" stroke="#9FE1CB" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="48" y1="66" x2="4" y2="96" stroke="#9FE1CB" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="48" y1="12" x2="96" y2="38" stroke="#AFA9EC" stroke-width="1.0" stroke-linecap="round"/>
+    <line x1="96" y1="38" x2="100" y2="82" stroke="#AFA9EC" stroke-width="1.0" stroke-linecap="round"/>
+    <line x1="100" y1="82" x2="72" y2="112" stroke="#AFA9EC" stroke-width="1.0" stroke-linecap="round"/>
+    <circle cx="48" cy="66" r="13" fill="#1D9E75"/>
+    <circle cx="48" cy="12" r="8.5" fill="#534AB7"/>
+    <circle cx="96" cy="38" r="6" fill="#534AB7"/>
+    <circle cx="100" cy="82" r="7" fill="#1D9E75"/>
+    <circle cx="72" cy="112" r="5.5" fill="#534AB7"/>
+    <circle cx="4" cy="96" r="6" fill="#1D9E75"/>
+  </g>
+</svg>

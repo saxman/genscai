@@ -59,13 +59,7 @@ source .venv/bin/activate
 pip install -e .                    # add '[dev]', '[notebooks]', or '[cuda]' as needed
 ```
 
-## Quick start
-
-Launch the example chatbot:
-
-```bash
-streamlit run streamlit/genscai_chatbot.py
-```
+## Getting started
 
 Open the notebooks (each use-case folder has a `notebooks/` and/or `scripts/` subdir):
 
@@ -73,7 +67,13 @@ Open the notebooks (each use-case folder has a `notebooks/` and/or `scripts/` su
 jupyter lab
 ```
 
-New here? Start with [00 - getting started/notebooks/01 - Environment Setup.ipynb](00%20-%20getting%20started/notebooks/01%20-%20Environment%20Setup.ipynb).
+New here? Start with [00 - getting started/notebooks/01 - Environment Setup.ipynb](00%20-%20getting%20started/notebooks/01%20-%20Environment%20Setup.ipynb), then work through the use-case folders in order.
+
+To preview a chatbot wired to the project's scientific tools (research-article search, disease-modeling framework docs), launch the example Streamlit app instead:
+
+```bash
+streamlit run streamlit/genscai_chatbot.py
+```
 
 ## Project layout
 
@@ -104,18 +104,16 @@ genscai/
 
 Each top-level folder is a use case with its own README listing its notebooks and scripts.
 
-| Use case | What it covers |
-| --- | --- |
-| [00 - getting started](00%20-%20getting%20started/) | Environment setup |
-| [01 - data collection](01%20-%20data%20collection/) | Retrieve abstracts/articles (MIDAS, medRxiv, arXiv) |
-| [02 - text analysis](02%20-%20text%20analysis/) | Information extraction, embeddings, classification |
-| [03 - knowledge graphs](03%20-%20knowledge%20graphs/) | Knowledge-graph construction and querying (GraphRAG, LangChain) |
-| [04 - semantic search](04%20-%20semantic%20search/) | medRxiv vector index and retrieval-augmented generation (RAG) |
-| [05 - model optimization](05%20-%20model%20optimization/) | Quantization and fine-tuning |
-| [06 - agents](06%20-%20agents/) | Tool-using agents (MCP, smolagents, AIMU workflows) |
-| [07 - literature research](07%20-%20literature%20research/) | Agentic literature research across six frameworks + a `genscai.corpus` build |
-| [08 - disease simulation](08%20-%20disease%20simulation/) | Compartmental-model intervention-planning agent |
-| [09 - evaluation](09%20-%20evaluation/) | Benchmarking models and agent configurations |
+- [00 - getting started](00%20-%20getting%20started/): Environment setup
+- [01 - data collection](01%20-%20data%20collection/): Retrieve abstracts/articles (MIDAS, medRxiv, arXiv)
+- [02 - text analysis](02%20-%20text%20analysis/): Information extraction, embeddings, classification
+- [03 - knowledge graphs](03%20-%20knowledge%20graphs/): Knowledge-graph construction and querying (GraphRAG, LangChain)
+- [04 - semantic search](04%20-%20semantic%20search/): medRxiv vector index and retrieval-augmented generation (RAG)
+- [05 - model optimization](05%20-%20model%20optimization/): Quantization and fine-tuning
+- [06 - agents](06%20-%20agents/): Tool-using agents (MCP, smolagents, AIMU workflows)
+- [07 - literature research](07%20-%20literature%20research/): Agentic literature research across six frameworks + a `genscai.corpus` build
+- [08 - disease simulation](08%20-%20disease%20simulation/): Compartmental-model intervention-planning agent
+- [09 - evaluation](09%20-%20evaluation/): Benchmarking models and agent configurations
 
 Within a folder, notebooks are numbered from `01` and meant to be worked through in order.
 
@@ -128,15 +126,13 @@ project's own [`genscai.corpus.Corpus`](genscai/corpus.py) helper (on AIMU), all
 models. Read them side by side. Requires `uv sync --all-extras`. See its
 [README](07%20-%20literature%20research/README.md).
 
-| # | Implementation |
-| --- | --- |
-| 01 | [AIMU](07%20-%20literature%20research/notebooks/01%20-%20AIMU.ipynb) |
-| 02 | [genscai](07%20-%20literature%20research/notebooks/02%20-%20genscai.ipynb) (`genscai.corpus.Corpus`, on AIMU) |
-| 03 | [smolagents](07%20-%20literature%20research/notebooks/03%20-%20smolagents.ipynb) |
-| 04 | [LangGraph](07%20-%20literature%20research/notebooks/04%20-%20LangGraph.ipynb) |
-| 05 | [PydanticAI](07%20-%20literature%20research/notebooks/05%20-%20PydanticAI.ipynb) |
-| 06 | [CrewAI](07%20-%20literature%20research/notebooks/06%20-%20CrewAI.ipynb) |
-| 07 | [LlamaIndex](07%20-%20literature%20research/notebooks/07%20-%20LlamaIndex.ipynb) |
+- 01: [AIMU](07%20-%20literature%20research/notebooks/01%20-%20AIMU.ipynb)
+- 02: [genscai](07%20-%20literature%20research/notebooks/02%20-%20genscai.ipynb) (`genscai.corpus.Corpus`, on AIMU)
+- 03: [smolagents](07%20-%20literature%20research/notebooks/03%20-%20smolagents.ipynb)
+- 04: [LangGraph](07%20-%20literature%20research/notebooks/04%20-%20LangGraph.ipynb)
+- 05: [PydanticAI](07%20-%20literature%20research/notebooks/05%20-%20PydanticAI.ipynb)
+- 06: [CrewAI](07%20-%20literature%20research/notebooks/06%20-%20CrewAI.ipynb)
+- 07: [LlamaIndex](07%20-%20literature%20research/notebooks/07%20-%20LlamaIndex.ipynb)
 
 ### Disease simulation
 

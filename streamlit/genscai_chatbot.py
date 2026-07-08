@@ -1,6 +1,7 @@
 from genscai import paths
 
-from aimu.models import AnthropicClient, HuggingFaceClient, OllamaClient, StreamPhase
+from aimu.agents import Agent
+from aimu.models import AnthropicClient, HuggingFaceClient, OllamaClient, StreamingContentType
 from aimu.tools import MCPClient
 from aimu.history import ConversationManager
 
@@ -33,6 +34,9 @@ MODEL_CLIENTS = [
     HuggingFaceClient,
 ]
 
+# Upper bound on the model<->tools rounds the agent runs before forcing a final answer.
+MAX_ITERATIONS = 10
+
 MCP_SERVERS = {
     "mcpServers": {
         "genscai": {"command": "python", "args": [str(paths.package / "tools.py")]},
@@ -47,6 +51,19 @@ MCP_SERVERS = {
 }
 
 
+def build_model_client(client_cls, model):
+    """Build a base model client wrapped in an Agent that holds the MCP tools, exposed as a client.
+
+    Tool execution now lives in the Agent, not the model client, so tools reach the model only
+    through ``Agent(base_client, tools=...)``. ``as_model_client()`` returns a client-like view
+    whose ``chat()`` drives the multi-round tool-use loop. The base client is returned alongside
+    it for the sidebar selectors and ``isinstance`` checks, which the agentic view doesn't expose.
+    """
+    base_client = client_cls(model, system_message=SYSTEM_MESSAGE)
+    agent = Agent(base_client, tools=st.session_state.tools, max_iterations=MAX_ITERATIONS)
+    return base_client, agent.as_model_client()
+
+
 def stream_chat_response(streamed_response):
     """Render a stream of StreamChunk into the Streamlit UI."""
     current_phase = None
@@ -54,7 +71,7 @@ def stream_chat_response(streamed_response):
     current_text = ""
 
     for chunk in streamed_response:
-        if chunk.phase == StreamPhase.TOOL_CALLING:
+        if chunk.phase == StreamingContentType.TOOL_CALLING:
             current_phase = None
             with st.expander("🔧 Tool call"):
                 st.markdown(f"**Tool call:** {chunk.content['name']}")
@@ -71,7 +88,7 @@ def stream_chat_response(streamed_response):
             if current_box is None:
                 current_box = (
                     st.expander("🤔 Thinking").empty()
-                    if chunk.phase == StreamPhase.THINKING
+                    if chunk.phase == StreamingContentType.THINKING
                     else st.chat_message("assistant").empty()
                 )
             current_box.markdown(current_text)
@@ -79,11 +96,13 @@ def stream_chat_response(streamed_response):
 
 # Initialize the session state if we don't already have a model loaded. This only happens first run.
 if "model_client" not in st.session_state:
-    st.session_state.model = MODEL_CLIENTS[0].TOOL_MODELS[0]
-    st.session_state.model_client = MODEL_CLIENTS[0](st.session_state.model, system_message=SYSTEM_MESSAGE)
+    # Connect to the MCP servers once and expose their tools as agent tools.
+    st.session_state.tools = MCPClient(MCP_SERVERS).as_tools()
 
-    st.session_state.mcp_client = MCPClient(MCP_SERVERS)
-    st.session_state.model_client.mcp_client = st.session_state.mcp_client
+    st.session_state.model = MODEL_CLIENTS[0].TOOL_MODELS[0]
+    st.session_state.base_client, st.session_state.model_client = build_model_client(
+        MODEL_CLIENTS[0], st.session_state.model
+    )
 
     st.session_state.conversation_manager = ConversationManager(
         db_path=str(paths.output / "chat_history.json"),
@@ -95,31 +114,24 @@ with st.sidebar:
     st.title("IDM Modeling Research Assistant")
     st.write("Discuss infectious disease modeling with access to current disease modeling research.")
 
-    model = st.selectbox("Model", options=st.session_state.model_client.TOOL_MODELS, format_func=lambda x: x.name)
+    # Selectors and isinstance checks use base_client; the agentic view doesn't expose TOOL_MODELS.
+    model = st.selectbox("Model", options=st.session_state.base_client.TOOL_MODELS, format_func=lambda x: x.name)
     temperature = st.sidebar.slider("temperature", min_value=0.01, max_value=1.0, value=0.15, step=0.01)
     top_p = st.sidebar.slider("top_p", min_value=0.01, max_value=1.0, value=0.9, step=0.01)
     repeat_penalty = st.sidebar.slider("repeat_penalty", min_value=0.9, max_value=1.5, value=1.1, step=0.1)
     model_client = st.selectbox("Model Client", options=MODEL_CLIENTS, format_func=lambda x: x.__name__)
 
-    # If the model client has changed (e.g. OllamaClient to HuggingFaceClient), create a new mode client instance.
+    # If the model client has changed (e.g. OllamaClient to HuggingFaceClient), create a new model client instance.
     # Otherwise, if the model has changed, create a new instance of the model client using the new model.
-    if not isinstance(st.session_state.model_client, model_client):
-        del st.session_state.model_client
-
+    if not isinstance(st.session_state.base_client, model_client):
         st.session_state.model = model_client.TOOL_MODELS[0]
-        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE)
-
-        st.session_state.model_client.mcp_client = st.session_state.mcp_client
-
+        st.session_state.base_client, st.session_state.model_client = build_model_client(
+            model_client, st.session_state.model
+        )
         st.rerun()
     elif st.session_state.model != model:
-        del st.session_state.model_client
-
         st.session_state.model = model
-        st.session_state.model_client = model_client(st.session_state.model, system_message=SYSTEM_MESSAGE)
-
-        st.session_state.model_client.mcp_client = st.session_state.mcp_client
-
+        st.session_state.base_client, st.session_state.model_client = build_model_client(model_client, model)
         st.rerun()
 
     if st.button("Reset chat"):
